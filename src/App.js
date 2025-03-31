@@ -22,6 +22,7 @@ import { AbsensiRekapSiswa } from "./views/Siswa/Absensi/AbsensiRekapSiswa";
 import PrestasiForm from "./views/Admin/Prestasi/PrestasiForm";
 import PrestasiData from "./views/Admin/Prestasi/PrestasiData";
 import GuruProfile from "./views/Admin/Guru/GuruProfile";
+import { GuruLayout } from "./views/Guru/GuruLayout";
 
 function App() {
   const level = localStorage.getItem("level");
@@ -33,6 +34,22 @@ function App() {
         <Route path="/office" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="dashboard/guru" element={<GuruDashboard />} />
+          <Route path="prestasi_siswa/add" element={<PrestasiForm />} />
+          <Route path="prestasi_siswa" element={<PrestasiData />} />
+          <Route path="guru/add" element={<GuruForm />} />
+          <Route
+            path="guru"
+            element={level === "guru" ? <GuruProfile /> : <GuruData />}
+          />
+          <Route path="siswa/add" element={<SiswaForm />} />
+          <Route path="siswa" element={<SiswaData />} />
+          <Route path="absensi" element={<AbsensiForm />} />
+          <Route path="soal_ujian/:kelas/add" element={<SoalUjianForm />} />
+          <Route path="soal_ujian/:kelas" element={<SoalUjianData />} />
+          <Route path="soal_ujian" element={<SoalUjian />} />
+        </Route>
+        <Route path="/guru" element={<GuruLayout />}>
+          <Route path="dashboard" element={<GuruDashboard />} />
           <Route path="prestasi_siswa/add" element={<PrestasiForm />} />
           <Route path="prestasi_siswa" element={<PrestasiData />} />
           <Route path="guru/add" element={<GuruForm />} />
