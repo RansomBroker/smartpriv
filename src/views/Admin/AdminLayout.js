@@ -30,16 +30,23 @@ export function AdminLayout() {
     },
   ]);
 
+  // Sidebar terbuka secara default
   const [showSidebar, setShowSidebar] = useState(true);
+  // Sidebar dalam keadaan expanded secara default
   const [collapsed, setCollapsed] = useState(false);
 
   const toggleSidebar = () => {
+    console.log(showSidebar, collapsed);
     setShowSidebar(!showSidebar);
   };
 
   const toggleCollapse = () => {
+    console.log(showSidebar, collapsed);
     setCollapsed(!collapsed);
   };
+
+  // Helper untuk mendeteksi perangkat mobile
+  const isMobile = () => window.innerWidth < 768;
 
   return (
     <div className="d-flex" style={{ minHeight: "100vh" }}>
@@ -55,7 +62,12 @@ export function AdminLayout() {
           <Sidebar
             logoSrc="/assets/images/smart_private.png"
             navItems={navItems}
-            onLinkClick={() => setShowSidebar(false)}
+            onLinkClick={() => {
+              // Hanya sembunyikan sidebar saat perangkat mobile
+              if (isMobile()) {
+                setShowSidebar(false);
+              }
+            }}
             collapsed={collapsed}
           />
           <div className="text-center mb-2">
@@ -74,7 +86,7 @@ export function AdminLayout() {
       <div className="flex-grow-1">
         <Navbar />
         <div className="p-4">
-          {/* Tombol toggle untuk perangkat mobile */}
+          {/* Tombol toggle hanya muncul untuk perangkat mobile */}
           <Button
             variant="primary"
             onClick={toggleSidebar}
