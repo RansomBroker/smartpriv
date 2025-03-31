@@ -1,8 +1,8 @@
-import { Image, Container, Row, Col, Card } from "react-bootstrap";
+import { Image } from "react-bootstrap";
 
 function Navbar() {
   return (
-    <div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="d-flex justify-content-between align-items-center mb-4 p-4">
       <h2 className="h4 fw-bold">Dashboard</h2>
       <div className="d-flex align-items-center">
         <input

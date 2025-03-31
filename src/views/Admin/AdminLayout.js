@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
-import { Image, Container, Row, Col, Card } from "react-bootstrap";
+import React, { useState } from "react";
+import { Button } from "react-bootstrap";
+import { Outlet } from "react-router-dom";
 import Navbar from "../../components/Navbar";
+import Sidebar from "../../components/Sidebar";
 
 export function AdminLayout() {
-  const [NavList] = useState([
+  const [navItems] = useState([
     {
       to: "/office/dashboard",
       image: "/assets/images/dashboard.png",
@@ -29,45 +30,63 @@ export function AdminLayout() {
     },
   ]);
 
-  return (
-    <Container fluid>
-      <Row>
-        {/* Sidebar */}
-        <Col md={3} className="bg-white p-4 min-vh-100">
-          <div className="d-flex align-items-center mb-4">
-            <Image src={`/assets/images/smart_private.png`} fluid />
-          </div>
-          <nav>
-            <ul className="nav flex-column">
-              {NavList.map((nav, index) => (
-                <li key={index} className="nav-item mb-3">
-                  <NavLink
-                    to={nav.to}
-                    className={({ isActive }) =>
-                      isActive ? "nav-link active" : "nav-link"
-                    }
-                  >
-                    <Image
-                      src={nav.image}
-                      className="me-2"
-                      height={20}
-                      width={20}
-                      alt={nav.text}
-                    />
-                    {nav.text}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </Col>
+  // Sidebar terbuka secara default
+  const [showSidebar, setShowSidebar] = useState(true);
+  // Sidebar dalam keadaan expanded secara default
+  const [collapsed, setCollapsed] = useState(false);
 
-        {/* Main Content */}
-        <Col md={9} className="p-4">
-          <Navbar />
+  const toggleSidebar = () => {
+    setShowSidebar(!showSidebar);
+  };
+
+  const toggleCollapse = () => {
+    setCollapsed(!collapsed);
+  };
+
+  return (
+    <div className="d-flex" style={{ minHeight: "100vh" }}>
+      {showSidebar && (
+        <div
+          className="bg-white"
+          style={{
+            width: collapsed ? "70px" : "250px",
+            borderRight: "1px solid #ddd",
+            transition: "width 0.3s",
+          }}
+        >
+          <Sidebar
+            logoSrc="/assets/images/smart_private.png"
+            navItems={navItems}
+            onLinkClick={() => setShowSidebar(false)}
+            collapsed={collapsed}
+          />
+          <div className="text-center mb-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={toggleCollapse}
+              style={{ padding: "0.25rem 0.5rem" }}
+            >
+              {collapsed ? ">>" : "<<"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="flex-grow-1">
+        <Navbar />
+        <div className="p-4">
+          {/* Tombol toggle untuk perangkat mobile */}
+          <Button
+            variant="primary"
+            onClick={toggleSidebar}
+            className="mb-3 d-md-none"
+          >
+            {showSidebar ? "Tutup Sidebar" : "Buka Sidebar"}
+          </Button>
           <Outlet />
-        </Col>
-      </Row>
-    </Container>
+        </div>
+      </div>
+    </div>
   );
 }
