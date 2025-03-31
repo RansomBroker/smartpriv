@@ -30,9 +30,7 @@ export function AdminLayout() {
     },
   ]);
 
-  // Sidebar terbuka secara default
   const [showSidebar, setShowSidebar] = useState(true);
-  // Sidebar dalam keadaan expanded secara default
   const [collapsed, setCollapsed] = useState(false);
 
   const toggleSidebar = () => {
