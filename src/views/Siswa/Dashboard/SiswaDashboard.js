@@ -1,71 +1,77 @@
-import { Card, Col, Dropdown, Image, Row } from "react-bootstrap";
-import { Person } from "react-bootstrap-icons";
-import { Link } from "react-router-dom";
+import {
+  Button,
+  Card,
+  Col,
+  Dropdown,
+  Image,
+  Row,
+  Container,
+} from "react-bootstrap";
+
 function SiswaDashboard() {
-    return (
-        <div>
-
-            <div className="w-100 p-4">
-                <div className="d-flex flex-row justify-content-between align-items-center">
-                    <h1>Welcome, <span className="fw-bolder">Student</span></h1>
-                    <Dropdown>
-                        <Dropdown.Toggle variant="light" id="dropdown-basic" className="rounded-pill">
-                            <Person />
-                        </Dropdown.Toggle>
-
-                        <Dropdown.Menu>
-                            <Dropdown.Item href="/">Logout</Dropdown.Item>
-                        </Dropdown.Menu>
-                    </Dropdown>
+  return (
+    <div className="d-flex flex-column">
+      <Row>
+        <Col md={12} lg={8}>
+          <Card className="w-100 mb-4">
+            <Card.Body className="d-flex flex-column">
+              <div className="w-full d-flex justify-content-center">
+                <img src={`/assets/images/smart_private.png`} width={128} />
+              </div>
+              <p className="text-center fw-bold mb-1">
+                Jl. Raya Kunir 01/03 Kec.Wonodadi Kab.Blitar Kode Pos 66155
+              </p>
+              <p className="text-center fw-bold">
+                Instagram : @smartprivate.blitar
+              </p>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={12} lg={4}>
+          <div className="w-100 d-flex justify-content-center">
+            <img src={`/assets/images/pie.png`} />
+          </div>
+          <div className="w-100 d-flex justify-content-start mt-3">
+            <ul className="w-100">
+              <li className="text-primary">
+                <div className="d-flex justify-content-between">
+                  <span className="text-dark">Test Harian</span>
+                  <span className="text-primary">20%</span>
                 </div>
-                <Row>
-                    <Col md="6">
-                        <Card>
-                            <Card.Body className="align-items-center text-center">
-                                <Image src={`/assets/images/smart_private.png`} fluid />
-                                <p>Jl. Raya Kunir  01/03 Kec.Wonodadi Kab.Blitar Kode Pos 66155<br />
-                                    Instagram : @smartprivate.blitar</p>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                    <Col md="6" className="my-auto">
-                        <Card>
-                            <Card.Body style={{ margin: `2rem 0` }}>
-                                <Row>
-                                    <Col>
-                                        <Card className="border-0 bg-grey">
-                                            <Card.Body>
-                                                <div className="d-flex flex-row justify-content-center gap-4 align-items-center">
-                                                    <div><Image src={`/assets/images/siswa_.png`} fluid style={{ maxWidth: '4rem' }} /></div>
-                                                    <h5>Soal Ujian</h5>
-                                                </div>
-                                                <Link to={`/siswa/soal_ujian`} className="stretched-link" />
-                                            </Card.Body>
-                                        </Card>
-                                    </Col>
-                                    <Col>
-                                        <Card className="border-0 bg-grey">
-                                            <Card.Body>
-                                                <div className="d-flex flex-row justify-content-center gap-4 align-items-center">
-                                                    <div><Image src={`/assets/images/guru_.png`} fluid style={{ maxWidth: '4rem' }} /></div>
-                                                    <h5>Rekap Absen</h5>
-                                                    <Link to={`/siswa/absensi`} className="stretched-link" />
-                                                </div>
-                                            </Card.Body>
-                                        </Card>
-                                    </Col>
-                                </Row>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                </Row>
-                <div className="d-flex flex-row justify-content-between align-items-center">
-
-
-
+              </li>
+              <li className="text-warning">
+                <div className="d-flex justify-content-between">
+                  <span className="text-dark">Tugas</span>
+                  <span className="text-warning">20%</span>
                 </div>
+              </li>
+              <li className="text-success">
+                <div className="d-flex justify-content-between">
+                  <span className="text-dark">Ujian Akhir Periode</span>
+                  <span className="text-success">20%</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </Col>
+      </Row>
+      <p className="fw-bold fs-4">Student Chart</p>
+      {/* CHART IMAGE HERE */}
+      <Container fluid>
+        <Row className="g-4 mb-4">
+          <Col>
+            <div className="w-100 d-flex justify-content-center">
+              <img src={`/assets/images/chart.png`} />
             </div>
-        </div>
-    )
+          </Col>
+          <Col>
+            <div className="w-100 d-flex justify-content-center">
+              <img src={`/assets/images/peta.png`} />
+            </div>
+          </Col>
+        </Row>
+      </Container>
+    </div>
+  );
 }
 export default SiswaDashboard;
