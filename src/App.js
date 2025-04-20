@@ -53,10 +53,7 @@ function App() {
           <Route path="prestasi_siswa/add" element={<PrestasiForm />} />
           <Route path="prestasi_siswa" element={<PrestasiData />} />
           <Route path="guru/add" element={<GuruForm />} />
-          <Route
-            path="guru"
-            element={level === "guru" ? <GuruProfile /> : <GuruData />}
-          />
+          <Route path="guru" element={<GuruProfile />} />
           <Route path="siswa/add" element={<SiswaForm />} />
           <Route path="siswa" element={<SiswaData />} />
           <Route path="absensi" element={<AbsensiForm />} />

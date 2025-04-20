@@ -33,6 +33,8 @@ function Login() {
       password: "guru",
       level: "guru",
       nama: "Bu Fetty",
+      nohp: "081234567890",
+      alamat: "Jl. Raya Kunir 01/03 Kec.Wonodadi Kab.Blitar Kode Pos 66155",
     },
     {
       id: 3,
@@ -67,6 +69,11 @@ function Login() {
       localStorage.setItem("level", foundUser.level);
       localStorage.setItem("user_id", foundUser.id);
       localStorage.setItem("user_nama", foundUser.nama);
+
+      if (foundUser.level === "guru") {
+        localStorage.setItem("user_nohp", foundUser.nohp);
+        localStorage.setItem("user_alamat", foundUser.alamat);
+      }
 
       // Redirect ke dashboard sesuai level
       if (foundUser.level === "siswa") {
