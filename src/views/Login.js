@@ -78,6 +78,9 @@ function Login() {
       // Redirect ke dashboard sesuai level
       if (foundUser.level === "siswa") {
         navigate(`/siswa/dashboard`);
+      }
+      if (foundUser.level === "admin") {
+        navigate(`/office/dashboard`);
       } else {
         navigate(`/guru/dashboard`);
       }
