@@ -78,11 +78,10 @@ function Login() {
       // Redirect ke dashboard sesuai level
       if (foundUser.level === "siswa") {
         navigate(`/siswa/dashboard`);
-      }
-      if (foundUser.level === "admin") {
-        navigate(`/office/dashboard`);
-      } else {
+      } else if (foundUser.level === "guru") {
         navigate(`/guru/dashboard`);
+      } else {
+        navigate(`/office/dashboard`);
       }
     } else {
       setError("Username atau Password salah!"); // Tampilkan error jika login gagal
