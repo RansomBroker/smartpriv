@@ -10,42 +10,17 @@ import {
   Alert,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../libs/auth";
 
 function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [state, setState] = useState({
     input: { username: "", password: "" },
   });
-  const [error, setError] = useState(""); // State untuk pesan error
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Simulasi data pengguna (nantinya bisa diganti dengan API dari backend)
-  const users = [
-    {
-      id: 1,
-      username: "admin",
-      password: "admin",
-      level: "admin",
-      nama: "Administrator",
-    },
-    {
-      id: 2,
-      username: "guru",
-      password: "guru",
-      level: "guru",
-      nama: "Bu Fetty",
-      nohp: "081234567890",
-      alamat: "Jl. Raya Kunir 01/03 Kec.Wonodadi Kab.Blitar Kode Pos 66155",
-    },
-    {
-      id: 3,
-      username: "siswa",
-      password: "siswa",
-      level: "siswa",
-      nama: "Fetty Ayu",
-    },
-  ];
-
-  // Handle input perubahan
   const handleChange = (e) => {
     const { name, value } = e.target;
     setState((prevState) => ({
@@ -54,38 +29,48 @@ function Login() {
     }));
   };
 
-  // Handle submit login
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    const foundUser = users.find(
-      (user) =>
-        user.username === state.input.username &&
-        user.password === state.input.password
-    );
+    try {
+      const result = await login(state.input.username, state.input.password);
+      
+      if (result.success) {
+        const user = result.user;
+        
+        // Store user data in localStorage for backward compatibility
+        localStorage.setItem("level", user.level);
+        localStorage.setItem("user_id", user.id);
+        localStorage.setItem("user_nama", user.nama);
+        
+        if (user.level === "guru") {
+          localStorage.setItem("user_nohp", user.nohp);
+          localStorage.setItem("user_alamat", user.alamat);
+        }
 
-    if (foundUser) {
-      // Simpan data pengguna ke localStorage
-      localStorage.setItem("level", foundUser.level);
-      localStorage.setItem("user_id", foundUser.id);
-      localStorage.setItem("user_nama", foundUser.nama);
-
-      if (foundUser.level === "guru") {
-        localStorage.setItem("user_nohp", foundUser.nohp);
-        localStorage.setItem("user_alamat", foundUser.alamat);
-      }
-
-      // Redirect ke dashboard sesuai level
-      if (foundUser.level === "siswa") {
-        navigate(`/siswa/dashboard`);
-      } else if (foundUser.level === "guru") {
-        navigate(`/guru/dashboard`);
+        // Redirect based on user level
+        if (user.level === "siswa") {
+          navigate(`/siswa/dashboard`);
+        } else if (user.level === "guru") {
+          navigate(`/guru/dashboard`);
+        } else {
+          navigate(`/office/dashboard`);
+        }
       } else {
-        navigate(`/office/dashboard`);
+        setError(result.error || "Username atau Password salah!");
       }
-    } else {
-      setError("Username atau Password salah!"); // Tampilkan error jika login gagal
+    } catch (err) {
+      setError("Terjadi kesalahan saat login. Silakan coba lagi.");
+      console.error("Login error:", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleBack = () => {
+    navigate("/");
   };
 
   return (
@@ -104,7 +89,6 @@ function Login() {
               />
             </div>
 
-            {/* Tampilkan error jika ada */}
             {error && (
               <Alert variant="danger" className="mt-3">
                 {error}
@@ -118,6 +102,7 @@ function Login() {
                   name="username"
                   className="bg-transparent border-dark p-2"
                   onChange={handleChange}
+                  disabled={loading}
                   required
                 />
               </FormGroup>
@@ -129,23 +114,26 @@ function Login() {
                   name="password"
                   className="bg-transparent border-dark p-2"
                   onChange={handleChange}
+                  disabled={loading}
                   required
                 />
               </FormGroup>
 
-              <Row>
+              <Row className="mb-3">
                 <Col xs="4" className="mx-auto">
                   <div className="d-grid">
                     <Button
                       type="submit"
                       variant="light"
                       className="rounded-pill p-2"
+                      disabled={loading}
                     >
-                      Masuk
+                      {loading ? "Loading..." : "Masuk"}
                     </Button>
                   </div>
                 </Col>
               </Row>
+
             </Form>
           </div>
         </Col>

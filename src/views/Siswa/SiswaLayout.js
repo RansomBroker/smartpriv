@@ -21,6 +21,11 @@ export function SiswaLayout({ component }) {
       image: "/assets/images/ujian.png",
       text: "Soal Ujian",
     },
+    {
+      to: "/siswa/rekap_prestasi",
+      image: "/assets/images/prestasi.png",
+      text: "Rekap Prestasi",
+    },
   ]);
 
   // Sidebar terbuka secara default
