@@ -100,24 +100,42 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const { isAuthenticated, user } = await authService.checkAuth();
-        if (isAuthenticated) {
-          setUser(user);
+        // First check if we have stored user data
+        const storedUser = authService.getStoredUser();
+        const token = localStorage.getItem('authToken');
+        
+        if (token && storedUser) {
+          // If we have both token and stored user, set it immediately
+          setUser(storedUser);
+          
+          // Then verify with API in the background
+          try {
+            const response = await api.get('/auth/me');
+            setUser(response.data);
+          } catch (error) {
+            console.error('Auth verification failed:', error);
+            // Only logout if token is invalid
+            if (error.response?.status === 401) {
+              authService.logout();
+              setUser(null);
+            }
+          }
         } else {
-          // Just clear any stale auth data without redirecting
+          // No stored data, clear any stale data
           authService.logout();
+          setUser(null);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        // Just clear any stale auth data without redirecting
         authService.logout();
+        setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
     initAuth();
-  }, [navigate]);
+  }, []); // Remove navigate dependency to prevent unnecessary re-renders
 
   const login = async (username, password) => {
     const result = await authService.login(username, password);
@@ -141,8 +159,9 @@ export function AuthProvider({ children }) {
     isAuthenticated: authService.isAuthenticated
   };
 
+  // Don't render anything during initial loading
   if (loading) {
-    return <div>Loading...</div>; // You can replace this with a proper loading component
+    return null;
   }
 
   return (

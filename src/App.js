@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import "./App.css";
 import { AuthProvider, useAuth } from "./libs/auth";
 import AbsensiAdmin from "./views/Admin/Absensi/AbsensiAdmin";
@@ -32,18 +32,31 @@ import { GuruLayout } from "./views/Guru/GuruLayout";
 // Protected Route component
 function ProtectedRoute({ children, allowedLevels }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
   
   if (loading) {
-    return <div>Loading...</div>;
+    // Show loading state but don't redirect
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <div>Loading...</div>
+      </div>
+    );
   }
 
-  // For protected routes, redirect to home if not authenticated
-  if (!user) {
-    return <Navigate to="/" replace />;
+  // If not authenticated, redirect to login with return path
+  if (!loading && !user) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  if (allowedLevels && !allowedLevels.includes(user.level)) {
-    return <Navigate to="/" replace />;
+  // If user level not allowed, redirect to appropriate dashboard
+  if (!loading && allowedLevels && !allowedLevels.includes(user.level)) {
+    if (user.level === "siswa") {
+      return <Navigate to="/siswa/dashboard" replace />;
+    } else if (user.level === "guru") {
+      return <Navigate to="/guru/dashboard" replace />;
+    } else {
+      return <Navigate to="/office/dashboard" replace />;
+    }
   }
 
   return children;
@@ -52,13 +65,23 @@ function ProtectedRoute({ children, allowedLevels }) {
 // Login Route component
 function LoginRoute() {
   const { user, loading } = useAuth();
+  const location = useLocation();
+  const from = location.state?.from || '/';
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <div>Loading...</div>
+      </div>
+    );
   }
 
-  // If already logged in, go to dashboard
-  if (user) {
+  // If authenticated, redirect to the saved path or appropriate dashboard
+  if (!loading && user) {
+    if (from !== '/' && from !== '/login') {
+      return <Navigate to={from} replace />;
+    }
+    
     if (user.level === "siswa") {
       return <Navigate to="/siswa/dashboard" replace />;
     } else if (user.level === "guru") {
