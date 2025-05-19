@@ -101,6 +101,7 @@ function AppRoutes() {
         <Route path="soal_ujian/:kelas/add" element={<SoalUjianForm />} />
         <Route path="soal_ujian/:kelas" element={<SoalUjianData />} />
         <Route path="soal_ujian" element={<SoalUjian />} />
+        <Route path="prestasi_siswa/edit/:id" element={<PrestasiForm />} />
       </Route>
 
       <Route
@@ -112,13 +113,14 @@ function AppRoutes() {
         }
       >
         <Route path="dashboard" element={<GuruDashboard />} />
-        <Route path="prestasi_siswa/add" element={<PrestasiForm />} />
-        <Route path="prestasi_siswa" element={<PrestasiData />} />
-        <Route path="guru/add" element={<GuruForm />} />
         <Route path="guru" element={<GuruProfile />} />
         <Route path="siswa/add" element={<SiswaForm />} />
+        <Route path="siswa/edit/:id" element={<SiswaForm />} />
         <Route path="siswa" element={<SiswaData />} />
         <Route path="absensi" element={<AbsensiGuru />} />
+        <Route path="prestasi_siswa/add" element={<PrestasiForm />} />
+        <Route path="prestasi_siswa/edit/:id" element={<PrestasiForm />} />
+        <Route path="prestasi_siswa" element={<PrestasiData />} />
         <Route path="soal_ujian/:kelas/add" element={<SoalUjianForm />} />
         <Route path="soal_ujian/:kelas" element={<SoalUjianData />} />
         <Route path="soal_ujian" element={<SoalUjian />} />

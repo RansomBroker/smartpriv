@@ -1,81 +1,95 @@
 import { Badge, Card } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import { Pencil, Plus, Trash } from "react-bootstrap-icons";
 import SweetAlert2 from "react-sweetalert2";
+import axios from "axios";
 
 function PrestasiData() {
+    const navigate = useNavigate();
     const [datas, setDatas] = useState([]);
-    const [userRole, setUserRole] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [swalProps, setSwalProps] = useState({
         show: false,
-        onConfirmHandle: {},
+        onConfirmHandle: () => {}
     });
 
-    // Simulasi pengambilan role user dari localStorage atau API
-    useEffect(() => {
-        const role = localStorage.getItem("user_role"); // "admin" atau "guru"
-        setUserRole(role);
-        fetchPrestasi(role);
-    }, []);
-
-    const fetchPrestasi = async (role) => {
+    const fetchPrestasi = async () => {
         try {
-            let response;
-            if (role === "admin") {
-                response = await fetch("/api/prestasi"); // Admin lihat semua data
-            } else {
-                response = await fetch("/api/prestasi/guru"); // Guru hanya lihat data miliknya
-            }
-            const result = await response.json();
-            setDatas(result);
+            const response = await axios.get('/api/prestasi');
+            setDatas(response.data);
         } catch (error) {
-            console.error("Error fetching prestasi:", error);
+            console.error('Error fetching prestasi:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const submitDelete = (id) => {
-        console.log(`Menghapus prestasi dengan ID: ${id}`);
+    useEffect(() => {
+        fetchPrestasi();
+    }, []);
+
+    const handleDelete = async (id) => {
+        try {
+            await axios.delete(`/api/prestasi/${id}`);
+            // Refresh data after successful deletion
+            fetchPrestasi();
+            setSwalProps({ show: false });
+        } catch (error) {
+            console.error('Error deleting prestasi:', error);
+        }
     };
 
     const handleConfirmDelete = (id) => {
         setSwalProps({
             show: true,
-            title: "Konfirmasi",
-            text: "Yakin akan hapus data ini?",
-            icon: "question",
+            title: 'Konfirmasi',
+            text: 'Yakin akan hapus data ini?',
+            icon: 'question',
             showCancelButton: true,
-            onConfirmHandle: () => submitDelete(id),
+            onConfirmHandle: () => handleDelete(id)
         });
     };
 
     const columns = [
         {
-            name: "No",
-            cell: (row, index) => index + 1,
+            name: 'No',
+            cell: (row, index) => (index + 1),
+            width: '70px'
         },
         {
-            name: "Nama Siswa",
-            selector: (row) => row.nama_siswa,
+            name: 'Nama Siswa',
+            selector: row => row.user?.name || '-',
+            sortable: true
         },
         {
-            name: "Prestasi",
-            selector: (row) => row.prestasi,
+            name: 'Nama Prestasi',
+            selector: row => row.name || '-',
+            sortable: true
         },
         {
-            name: "Aksi",
+            name: 'Aksi',
             cell: (row) => (
                 <div className="d-flex gap-1">
-                    <Badge>
+                    <Badge 
+                        bg="primary" 
+                        role="button" 
+                        onClick={() => navigate(`/office/prestasi_siswa/edit/${row.id}`)}
+                    >
                         <Pencil />
                     </Badge>
-                    <Badge onClick={() => handleConfirmDelete(row.id)} bg="danger">
+                    <Badge 
+                        bg="danger" 
+                        role="button" 
+                        onClick={() => handleConfirmDelete(row.id)}
+                    >
                         <Trash />
                     </Badge>
                 </div>
             ),
-        },
+            width: '100px'
+        }
     ];
 
     return (
@@ -86,14 +100,21 @@ function PrestasiData() {
                     <div className="d-flex flex-row justify-content-between">
                         <h3>Prestasi Siswa</h3>
                         <div>
-                            <Link to={`/office/prestasi_siswa/add`} className="btn btn-outline-dark px-3">
+                            <Link to="/office/prestasi_siswa/add" className="btn btn-outline-dark px-3">
                                 <Plus /> Add
                             </Link>
                         </div>
                     </div>
 
                     <div className="my-5">
-                        <DataTable columns={columns} data={datas} persistTableHead />
+                        <DataTable
+                            columns={columns}
+                            data={datas}
+                            persistTableHead
+                            progressPending={loading}
+                            pagination
+                            highlightOnHover
+                        />
                     </div>
                 </Card.Body>
             </Card>

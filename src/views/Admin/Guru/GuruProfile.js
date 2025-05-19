@@ -1,116 +1,220 @@
 import { useState, useEffect } from "react";
-import { Button, Card, Col, Form, Image, Row } from "react-bootstrap";
+import { Button, Card, Col, Form, Row, Alert } from "react-bootstrap";
 import { Save } from "react-bootstrap-icons";
-import { Link, useParams } from "react-router-dom";
+import { useAuth } from "../../../libs/auth";
+import axios from "axios";
 
 function GuruProfile() {
-  const { id } = useParams();
-  const [state, setState] = useState({
-    input: {
-      nama: "",
-      no_hp: "",
-      alamat: "",
-    },
-  });
+    const { user: authUser } = useAuth(); // Rename to authUser to be clear it's from auth
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [userData, setUserData] = useState(null);
+    const [state, setState] = useState({
+        input: {
+            username: "",
+            name: "",
+            nohp: "",
+            alamat: "",
+            password: "",
+            password_confirmation: ""
+        }
+    });
 
-  // Load stored profile data on mount or when id changes
-  useEffect(() => {
-    const nama = localStorage.getItem("user_nama") || "";
-    const no_hp = localStorage.getItem("user_nohp") || "";
-    const alamat = localStorage.getItem("user_alamat") || "";
-    setState({ input: { nama, no_hp, alamat } });
-  }, [id]);
+    // Fetch user data from API using ID from auth
+    useEffect(() => {
+        const fetchUserData = async () => {
+            if (authUser?.id) {
+                try {
+                    const response = await axios.get(`/api/user/${authUser.id}`);
+                    setUserData(response.data);
+                    setState(prev => ({
+                        input: {
+                            ...prev.input,
+                            username: response.data.username || "",
+                            name: response.data.name || "",
+                            nohp: response.data.nohp || "",
+                            alamat: response.data.alamat || ""
+                        }
+                    }));
+                } catch (error) {
+                    console.error('Error fetching user data:', error);
+                    setError('Gagal mengambil data user');
+                }
+            }
+        };
+        fetchUserData();
+    }, [authUser?.id]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setState((prevState) => ({
-      ...prevState,
-      input: {
-        ...prevState.input,
-        [name]: value,
-      },
-    }));
-  };
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setState(prev => ({
+            ...prev,
+            input: {
+                ...prev.input,
+                [name]: value
+            }
+        }));
+    };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Example: save back to localStorage or send API request
-    localStorage.setItem("user_nama", state.input.nama);
-    localStorage.setItem("user_nohp", state.input.no_hp);
-    localStorage.setItem("user_alamat", state.input.alamat);
-    // Navigate or show success message
-  };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        setSuccess("");
+        setLoading(true);
 
-  return (
-    <Card>
-      <Card.Body className="p-4">
-        <h3>Data Guru</h3>
-        <Row className="align-items-center">
-          <Col xs={12} md={7}>
-            <Form onSubmit={handleSubmit}>
-              <Form.Group as={Row} className="mb-2">
-                <Form.Label column md={4}>
-                  Nama
-                </Form.Label>
-                <Col md={8}>
-                  <Form.Control
-                    name="nama"
-                    value={state.input.nama}
-                    onChange={handleChange}
-                    required
-                  />
-                </Col>
-              </Form.Group>
+        try {
+            // Create payload without empty password
+            const payload = { ...state.input };
+            if (!payload.password) {
+                delete payload.password;
+                delete payload.password_confirmation;
+            }
 
-              <Form.Group as={Row} className="mb-2">
-                <Form.Label column md={4}>
-                  No HP
-                </Form.Label>
-                <Col md={8}>
-                  <Form.Control
-                    name="no_hp"
-                    value={state.input.no_hp}
-                    onChange={handleChange}
-                    required
-                  />
-                </Col>
-              </Form.Group>
+            const response = await axios.put(`/api/user/${authUser.id}`, payload);
+            setUserData(response.data); // Update local user data with response
+            setSuccess("Data berhasil diperbarui");
+            
+            // Clear password fields after successful update
+            setState(prev => ({
+                input: {
+                    ...prev.input,
+                    password: "",
+                    password_confirmation: ""
+                }
+            }));
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            setError(error.response?.data?.message || 'Terjadi kesalahan saat memperbarui data');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-              <Form.Group as={Row} className="mb-2">
-                <Form.Label column md={4}>
-                  Alamat
-                </Form.Label>
-                <Col md={8}>
-                  <Form.Control
-                    as="textarea"
-                    name="alamat"
-                    value={state.input.alamat}
-                    onChange={handleChange}
-                    required
-                  />
-                </Col>
-              </Form.Group>
+    if (!userData) {
+        return (
+            <Card>
+                <Card.Body className="p-4">
+                    <div>Loading...</div>
+                </Card.Body>
+            </Card>
+        );
+    }
 
-              <Row>
-                <Col md={{ span: 8, offset: 4 }}>
-                  <Button type="submit" className="me-2">
-                    <Save /> Simpan
-                  </Button>
-                  <Link className="btn btn-outline-dark" to={`/office/guru`}>
-                    Batal
-                  </Link>
-                </Col>
-              </Row>
-            </Form>
-          </Col>
+    return (
+        <Card>
+            <Card.Body className="p-4">
+                <h3>Profil Guru</h3>
+                
+                {error && (
+                    <Alert variant="danger" className="mt-3">
+                        {error}
+                    </Alert>
+                )}
 
-          <Col xs={12} md={5}>
-            <Image src={"/assets/images/guru_profile.png"} fluid />
-          </Col>
-        </Row>
-      </Card.Body>
-    </Card>
-  );
+                {success && (
+                    <Alert variant="success" className="mt-3">
+                        {success}
+                    </Alert>
+                )}
+
+                <Row>
+                    <Col xs={12} md={7}>
+                        <Form onSubmit={handleSubmit}>
+                            <Form.Group as={Row} className="mb-2">
+                                <Form.Label column md={4}>Username</Form.Label>
+                                <Col md={8}>
+                                    <Form.Control 
+                                        name="username" 
+                                        value={state.input.username} 
+                                        onChange={handleChange} 
+                                        required 
+                                        disabled
+                                    />
+                                </Col>
+                            </Form.Group>
+
+                            <Form.Group as={Row} className="mb-2">
+                                <Form.Label column md={4}>Nama</Form.Label>
+                                <Col md={8}>
+                                    <Form.Control 
+                                        name="name" 
+                                        value={state.input.name} 
+                                        onChange={handleChange} 
+                                        required 
+                                    />
+                                </Col>
+                            </Form.Group>
+
+                            <Form.Group as={Row} className="mb-2">
+                                <Form.Label column md={4}>No. HP</Form.Label>
+                                <Col md={8}>
+                                    <Form.Control 
+                                        name="nohp" 
+                                        value={state.input.nohp} 
+                                        onChange={handleChange} 
+                                        required 
+                                    />
+                                </Col>
+                            </Form.Group>
+
+                            <Form.Group as={Row} className="mb-2">
+                                <Form.Label column md={4}>Alamat</Form.Label>
+                                <Col md={8}>
+                                    <Form.Control 
+                                        as="textarea" 
+                                        name="alamat" 
+                                        value={state.input.alamat} 
+                                        onChange={handleChange} 
+                                        required 
+                                        rows={3}
+                                    />
+                                </Col>
+                            </Form.Group>
+
+                            <Form.Group as={Row} className="mb-2">
+                                <Form.Label column md={4}>Password Baru</Form.Label>
+                                <Col md={8}>
+                                    <Form.Control 
+                                        type="password" 
+                                        name="password" 
+                                        value={state.input.password} 
+                                        onChange={handleChange} 
+                                        placeholder="Kosongkan jika tidak ingin mengubah password"
+                                    />
+                                </Col>
+                            </Form.Group>
+
+                            <Form.Group as={Row} className="mb-2">
+                                <Form.Label column md={4}>Konfirmasi Password</Form.Label>
+                                <Col md={8}>
+                                    <Form.Control 
+                                        type="password" 
+                                        name="password_confirmation" 
+                                        value={state.input.password_confirmation} 
+                                        onChange={handleChange} 
+                                        placeholder="Kosongkan jika tidak ingin mengubah password"
+                                    />
+                                </Col>
+                            </Form.Group>
+
+                            <Row>
+                                <Col md={{ span: 8, offset: 4 }}>
+                                    <Button 
+                                        type="submit" 
+                                        className="me-2" 
+                                        disabled={loading}
+                                    >
+                                        <Save /> {loading ? 'Menyimpan...' : 'Simpan'}
+                                    </Button>
+                                </Col>
+                            </Row>
+                        </Form>
+                    </Col>
+                </Row>
+            </Card.Body>
+        </Card>
+    );
 }
 
 export default GuruProfile;
