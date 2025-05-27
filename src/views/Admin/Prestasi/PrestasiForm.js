@@ -7,7 +7,7 @@ import axios from "axios";
 // Define API base URL based on environment
 const API_BASE_URL =
   process.env.NODE_ENV === "production"
-    ? "https://api.smartprivate.web.id/api"
+    ? "https://api.smartprivate.web.id" // Corrected: No trailing /api
     : ""; // For development, proxy will be used
 
 function PrestasiForm() {

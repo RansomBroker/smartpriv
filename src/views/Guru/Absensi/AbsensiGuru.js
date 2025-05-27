@@ -6,7 +6,7 @@ import { useAuth } from "../../../libs/auth";
 // Define API base URL based on environment
 const API_BASE_URL =
   process.env.NODE_ENV === "production"
-    ? "https://api.smartprivate.web.id/api"
+    ? "https://api.smartprivate.web.id"
     : ""; // For development, proxy will be used
 
 // Helper to get current YYYY-MM
