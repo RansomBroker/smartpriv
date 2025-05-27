@@ -3,6 +3,12 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../../libs/auth";
 
+// Define API base URL based on environment
+const API_BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://api.smartprivate.web.id/api"
+    : ""; // For development, proxy will be used
+
 // Helper to get current YYYY-MM
 const getCurrentYearMonth = () => {
   const now = new Date();
@@ -32,7 +38,7 @@ export default function AbsensiGuru() {
   // Fetch siswa for form (existing logic, populates siswaForForm)
   useEffect(() => {
     axios
-      .get("/api/user")
+      .get(`${API_BASE_URL}/api/user`)
       .then((response) => {
         const siswaData = response.data.filter((u) => u.level === "siswa");
         setSiswaForForm(
@@ -49,7 +55,7 @@ export default function AbsensiGuru() {
     if (user && user.id) {
       // Fetch whenever user.id is available, month selection will filter later
       axios
-        .get("/api/presensi")
+        .get(`${API_BASE_URL}/api/presensi`)
         .then((response) => {
           const filteredForGuru = response.data.filter(
             (p) => p.absentById === user.id
@@ -143,7 +149,7 @@ export default function AbsensiGuru() {
     }));
 
     axios
-      .post("/api/presensi", payload)
+      .post(`${API_BASE_URL}/api/presensi`, payload)
       .then((response) => {
         alert("Absensi berhasil disimpan!");
         setState((prevState) => ({
@@ -153,7 +159,7 @@ export default function AbsensiGuru() {
         // Re-fetch presensi data for rekap
         if (user && user.id) {
           axios
-            .get("/api/presensi")
+            .get(`${API_BASE_URL}/api/presensi`)
             .then((res) => {
               const filteredForGuru = res.data.filter(
                 (p) => p.absentById === user.id

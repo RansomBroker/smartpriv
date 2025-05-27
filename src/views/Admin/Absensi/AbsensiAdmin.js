@@ -3,6 +3,12 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../../libs/auth";
 
+// Define API base URL based on environment
+const API_BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://api.smartprivate.web.id/api"
+    : ""; // For development, proxy will be used
+
 // Helper to get current YYYY-MM
 const getCurrentYearMonth = () => {
   const now = new Date();
@@ -36,7 +42,7 @@ export default function AbsensiAdmin() {
   // Fetch siswa for form (existing logic)
   useEffect(() => {
     axios
-      .get("/api/user")
+      .get(`${API_BASE_URL}/api/user`)
       .then((response) => {
         const siswaData = response.data.filter((u) => u.level === "siswa");
         setState((prevState) => ({
@@ -52,7 +58,7 @@ export default function AbsensiAdmin() {
   // Fetch guru list for rekap dropdown
   useEffect(() => {
     axios
-      .get("/api/user")
+      .get(`${API_BASE_URL}/api/user`)
       .then((response) => {
         const gurus = response.data.filter((u) => u.level === "guru");
         setGuruList(gurus);
@@ -65,10 +71,8 @@ export default function AbsensiAdmin() {
   // Fetch all presensi data when selectedMonthYear changes (or on mount initially for current month)
   useEffect(() => {
     if (selectedMonthYear) {
-      // Potentially, you could fetch only for the selected month if the API supports it
-      // e.g., axios.get(`/api/presensi?month=${selectedMonthYear.split('-')[1]}&year=${selectedMonthYear.split('-')[0]}`)
       axios
-        .get("/api/presensi")
+        .get(`${API_BASE_URL}/api/presensi`)
         .then((response) => {
           setAllPresensiData(response.data);
         })
@@ -169,7 +173,7 @@ export default function AbsensiAdmin() {
     }));
 
     axios
-      .post("/api/presensi", payload)
+      .post(`${API_BASE_URL}/api/presensi`, payload)
       .then((response) => {
         console.log("Absensi submitted successfully:", response.data);
         alert("Absensi berhasil disimpan!");
@@ -180,7 +184,7 @@ export default function AbsensiAdmin() {
         // Re-fetch presensi data for rekap if the current month is selected
         if (selectedMonthYear === getCurrentYearMonth()) {
           axios
-            .get("/api/presensi")
+            .get(`${API_BASE_URL}/api/presensi`)
             .then((res) => setAllPresensiData(res.data))
             .catch((err) =>
               console.error("Error re-fetching presensi data:", err)

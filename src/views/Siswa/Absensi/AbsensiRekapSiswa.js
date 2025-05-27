@@ -3,6 +3,12 @@ import { Card, Col, Form, Row, Table } from "react-bootstrap";
 import { useAuth } from "../../../libs/auth";
 import axios from "axios";
 
+// Define API base URL based on environment
+const API_BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://api.smartprivate.web.id/api"
+    : ""; // For development, proxy will be used
+
 // Helper to get current YYYY-MM
 const getCurrentYearMonth = () => {
   const now = new Date();
@@ -39,7 +45,7 @@ export function AbsensiRekapSiswa() {
     if (loggedInUser && loggedInUser.id) {
       setIsLoading(true);
       axios
-        .get("/api/presensi")
+        .get(`${API_BASE_URL}/api/presensi`)
         .then((response) => {
           const myData = response.data.filter(
             (p) => p.userId === loggedInUser.id
