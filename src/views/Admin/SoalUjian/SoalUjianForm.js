@@ -3,6 +3,11 @@ import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import { Save } from "react-bootstrap-icons";
 import { Link, useParams, useNavigate } from "react-router-dom";
 
+const API_BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://api.smartprivate.web.id"
+    : ""; // For development, proxy will be used
+
 export default function SoalUjianForm() {
   const { kelas } = useParams();
   const navigate = useNavigate();
@@ -24,7 +29,7 @@ export default function SoalUjianForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/soal", {
+      const response = await fetch(`${API_BASE_URL}/api/soal`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

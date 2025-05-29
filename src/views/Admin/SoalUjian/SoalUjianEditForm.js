@@ -3,6 +3,11 @@ import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import { Save } from "react-bootstrap-icons";
 import { Link, useParams, useNavigate } from "react-router-dom";
 
+const API_BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://api.smartprivate.web.id"
+    : ""; // For development, proxy will be used
+
 export default function SoalUjianEditForm() {
   const { kelas, id } = useParams(); // Get kelas and id from URL
   const navigate = useNavigate();
@@ -21,7 +26,7 @@ export default function SoalUjianEditForm() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/soal/${id}`);
+        const response = await fetch(`${API_BASE_URL}/api/soal/${id}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -63,7 +68,7 @@ export default function SoalUjianEditForm() {
     e.preventDefault();
     setError(null);
     try {
-      const response = await fetch(`/api/soal/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/soal/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

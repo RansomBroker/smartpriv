@@ -6,6 +6,11 @@ import { Pencil, Plus, Trash } from "react-bootstrap-icons";
 import SweetAlert2 from "react-sweetalert2";
 import { useAuth } from "../../../libs/auth";
 
+const API_BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://api.smartprivate.web.id"
+    : ""; // For development, proxy will be used
+
 export default function SoalUjianData() {
   const { kelas } = useParams();
   const { user, loading: userLoading } = useAuth();
@@ -17,7 +22,7 @@ export default function SoalUjianData() {
   const fetchData = async () => {
     setDataLoading(true);
     try {
-      const response = await fetch("/api/soal");
+      const response = await fetch(`${API_BASE_URL}/api/soal`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -45,7 +50,7 @@ export default function SoalUjianData() {
     }
 
     try {
-      const response = await fetch(`/api/soal/${idToDelete}`, {
+      const response = await fetch(`${API_BASE_URL}/api/soal/${idToDelete}`, {
         method: "DELETE",
       });
 
