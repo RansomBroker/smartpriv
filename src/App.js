@@ -1,5 +1,11 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Route,
+  Routes,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import "./App.css";
 import { AuthProvider, useAuth } from "./libs/auth";
 import AbsensiAdmin from "./views/Admin/Absensi/AbsensiAdmin";
@@ -27,17 +33,21 @@ import PrestasiForm from "./views/Admin/Prestasi/PrestasiForm";
 import PrestasiData from "./views/Admin/Prestasi/PrestasiData";
 import GuruProfile from "./views/Admin/Guru/GuruProfile";
 import { GuruLayout } from "./views/Guru/GuruLayout";
+import SoalUjianEditForm from "./views/Admin/SoalUjian/SoalUjianEditForm";
 //import PenilaianPieChart from "./PenilaianPieChart";
 
 // Protected Route component
 function ProtectedRoute({ children, allowedLevels }) {
   const { user, loading } = useAuth();
   const location = useLocation();
-  
+
   if (loading) {
     // Show loading state but don't redirect
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100vh" }}
+      >
         <div>Loading...</div>
       </div>
     );
@@ -66,11 +76,14 @@ function ProtectedRoute({ children, allowedLevels }) {
 function LoginRoute() {
   const { user, loading } = useAuth();
   const location = useLocation();
-  const from = location.state?.from || '/';
+  const from = location.state?.from || "/";
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100vh" }}
+      >
         <div>Loading...</div>
       </div>
     );
@@ -78,10 +91,10 @@ function LoginRoute() {
 
   // If authenticated, redirect to the saved path or appropriate dashboard
   if (!loading && user) {
-    if (from !== '/' && from !== '/login') {
+    if (from !== "/" && from !== "/login") {
       return <Navigate to={from} replace />;
     }
-    
+
     if (user.level === "siswa") {
       return <Navigate to="/siswa/dashboard" replace />;
     } else if (user.level === "guru") {
@@ -100,7 +113,7 @@ function AppRoutes() {
       {/* Public routes - accessible without authentication */}
       <Route path="/" element={<Homepage />} />
       <Route path="/login" element={<LoginRoute />} />
-      
+
       {/* Protected routes */}
       <Route
         path="/office/*"
@@ -123,6 +136,10 @@ function AppRoutes() {
         <Route path="absensi" element={<AbsensiAdmin />} />
         <Route path="soal_ujian/:kelas/add" element={<SoalUjianForm />} />
         <Route path="soal_ujian/:kelas" element={<SoalUjianData />} />
+        <Route
+          path="soal_ujian/:kelas/edit/:id"
+          element={<SoalUjianEditForm />}
+        />
         <Route path="soal_ujian" element={<SoalUjian />} />
         <Route path="prestasi_siswa/edit/:id" element={<PrestasiForm />} />
       </Route>
@@ -146,6 +163,10 @@ function AppRoutes() {
         <Route path="prestasi_siswa" element={<PrestasiData />} />
         <Route path="soal_ujian/:kelas/add" element={<SoalUjianForm />} />
         <Route path="soal_ujian/:kelas" element={<SoalUjianData />} />
+        <Route
+          path="soal_ujian/:kelas/edit/:id"
+          element={<SoalUjianEditForm />}
+        />
         <Route path="soal_ujian" element={<SoalUjian />} />
       </Route>
 
@@ -160,8 +181,8 @@ function AppRoutes() {
         <Route path="dashboard" element={<SiswaDashboard />} />
         <Route path="absensi" element={<AbsensiRekapSiswa />} />
         <Route path="rekap_prestasi" element={<PrestasiRekapSiswa />} />
-        <Route path="soal_ujian/:kelas" element={<SoalUjianDataSiswa />} />
-        <Route path="soal_ujian" element={<SoalUjianSiswa />} />
+        <Route path="soal_ujian/:kelas" element={<SoalUjianData />} />
+        <Route path="soal_ujian" element={<SoalUjian />} />
       </Route>
 
       {/* Redirect unknown routes to homepage */}

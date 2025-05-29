@@ -1,108 +1,205 @@
-import React, { useState, useEffect } from "react";
-import { Badge, Card } from "react-bootstrap";
-import { useParams } from "react-router-dom";
+import { Badge, Card, Table, Button } from "react-bootstrap";
+import { Link, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
-import { Pencil, Trash } from "react-bootstrap-icons";
+import { Pencil, Plus, Trash } from "react-bootstrap-icons";
+import SweetAlert2 from "react-sweetalert2";
+import { useAuth } from "../../../libs/auth";
 
-const SoalUjianData = ({ soalList, onEdit, onDelete }) => {
-  const { kelas } = useParams(); // Get kelas from URL parameter
-  const [filteredData, setFilteredData] = useState([]);
+export default function SoalUjianData() {
+  const { kelas } = useParams();
+  const { user, loading: userLoading } = useAuth();
+  const [datas, setDatas] = useState([]);
+  const [swalProps, setSwalProps] = useState({});
+  const [itemToDeleteId, setItemToDeleteId] = useState(null);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  const fetchData = async () => {
+    setDataLoading(true);
+    try {
+      const response = await fetch("/api/soal");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const allData = await response.json();
+      const filteredData = allData.filter(
+        (item) => String(item.kelas) === String(kelas)
+      );
+      setDatas(filteredData);
+    } catch (error) {
+      console.error("Could not fetch data: ", error);
+      setDatas([]);
+    } finally {
+      setDataLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (kelas && soalList) {
-      setFilteredData(
-        soalList.filter((item) => String(item.kelas) === String(kelas))
-      );
-    } else {
-      setFilteredData([]); // Clear data if no kelas or soalList
-    }
-  }, [kelas, soalList]);
+    fetchData();
+  }, [kelas]);
 
-  const columns = [
+  const submitDelete = async (idToDelete) => {
+    if (!idToDelete) {
+      console.error("Delete aborted: ID is missing.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/soal/${idToDelete}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setSwalProps({
+          show: true,
+          title: "Sukses",
+          text: "Data berhasil dihapus",
+          icon: "success",
+        });
+        fetchData();
+        setItemToDeleteId(null);
+      } else {
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Gagal menghapus data" }));
+        setSwalProps({
+          show: true,
+          title: "Error",
+          text: errorData.message || "Gagal menghapus data",
+          icon: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting data:", error);
+      setSwalProps({
+        show: true,
+        title: "Error",
+        text: "Terjadi kesalahan saat menghapus data",
+        icon: "error",
+      });
+    }
+  };
+
+  const handleConfirmDelete = (id) => {
+    setItemToDeleteId(id);
+    setSwalProps({
+      show: true,
+      title: "Konfirmasi Hapus",
+      text: "Apakah Anda yakin ingin menghapus data ini?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, hapus!",
+      cancelButtonText: "Batal",
+      onConfirm: () => submitDelete(id),
+      onClose: () => {
+        setSwalProps({});
+        setItemToDeleteId(null);
+      },
+      onCancel: () => {
+        setSwalProps({});
+        setItemToDeleteId(null);
+      },
+    });
+  };
+
+  let columns = [
     {
       name: "No",
-      selector: (row, index) => index + 1,
-      sortable: true,
-      width: "60px",
+      cell: (row, index) => index + 1,
+      width: "70px",
     },
     {
-      name: "Judul Soal",
+      name: "Judul",
       selector: (row) => row.judul,
       sortable: true,
-      wrap: true,
     },
     {
-      name: "Link Soal",
+      name: "Link",
       cell: (row) => (
         <a href={row.link_soal} target="_blank" rel="noopener noreferrer">
           {row.link_soal}
         </a>
       ),
-      wrap: true,
-    },
-    {
-      name: "Aksi",
-      cell: (row) => (
-        <div className="d-flex gap-2">
-          <Badge
-            pill
-            bg="primary"
-            onClick={() => onEdit(row)}
-            style={{ cursor: "pointer", padding: "0.5em 0.75em" }}
-            className="d-flex align-items-center"
-          >
-            <Pencil size={12} className="me-1" /> Edit
-          </Badge>
-          <Badge
-            pill
-            bg="danger"
-            onClick={() => onDelete(row.id)}
-            style={{ cursor: "pointer", padding: "0.5em 0.75em" }}
-            className="d-flex align-items-center"
-          >
-            <Trash size={12} className="me-1" /> Hapus
-          </Badge>
-        </div>
-      ),
-      width: "180px",
-      center: true,
+      grow: 2,
     },
   ];
 
-  if (!kelas) {
-    return (
-      <p className="text-center mt-4 alert alert-info">
-        Silakan pilih kelas terlebih dahulu dari daftar di bawah untuk
-        menampilkan data soal ujian.
-      </p>
-    );
+  if (user && user.level !== "siswa") {
+    columns.push({
+      name: "Aksi",
+      cell: (row) => (
+        <div className="d-flex gap-1">
+          <Link
+            to={`${basePath}/soal_ujian/${kelas}/edit/${row.id}`}
+            className="btn btn-sm btn-warning"
+          >
+            <Pencil />
+          </Link>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => handleConfirmDelete(row.id)}
+          >
+            <Trash />
+          </Button>
+        </div>
+      ),
+      width: "120px",
+    });
   }
 
-  return (
-    <Card className="mt-3 mb-3">
-      <Card.Header>
-        <h5 className="mb-0 py-1">Data Soal Ujian Kelas {kelas}</h5>
-      </Card.Header>
-      <Card.Body className="p-0 p-md-2">
-        <DataTable
-          columns={columns}
-          data={filteredData}
-          pagination
-          persistTableHead
-          highlightOnHover
-          striped
-          dense
-          noDataComponent={
-            <div className="p-3 text-center">
-              Belum ada soal ujian untuk kelas {kelas}.
-            </div>
-          }
-          paginationPerPage={10}
-          paginationRowsPerPageOptions={[10, 20, 50]}
-        />
-      </Card.Body>
-    </Card>
-  );
-};
+  if (userLoading) {
+    return <p>Loading user information...</p>;
+  }
 
-export default SoalUjianData;
+  if (!user) {
+    return <p>User not authenticated. Please login.</p>;
+  }
+
+  // Determine basePath for links based on user level
+  let basePath = "/office"; // Default for admin
+  if (user.level === "guru") {
+    basePath = "/guru";
+  }
+  // Siswa level does not have add/edit/delete, so no basePath needed for them in this context
+
+  return (
+    <>
+      <SweetAlert2
+        {...swalProps}
+        didClose={() => {
+          setSwalProps({});
+        }}
+      />
+      <Card>
+        <Card.Body className="p-4">
+          <div className="d-flex flex-row justify-content-between align-items-center">
+            <h3>Soal Ujian Kelas {kelas}</h3>
+            {user.level !== "siswa" && (
+              <div>
+                <Link
+                  to={`${basePath}/soal_ujian/${kelas}/add`}
+                  className="btn btn-outline-dark px-3"
+                >
+                  <Plus /> Tambah Soal
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <div className="my-3">
+            <DataTable
+              columns={columns}
+              data={datas}
+              progressPending={dataLoading}
+              persistTableHead
+              pagination
+              highlightOnHover
+              striped
+            />
+          </div>
+        </Card.Body>
+      </Card>
+    </>
+  );
+}

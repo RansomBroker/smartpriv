@@ -1,14 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import { Save } from "react-bootstrap-icons";
 import { Link, useParams, useNavigate } from "react-router-dom";
 
-export default function SoalUjianForm() {
-  const { kelas } = useParams();
+export default function SoalUjianEditForm() {
+  const { kelas, id } = useParams(); // Get kelas and id from URL
   const navigate = useNavigate();
   const [state, setState] = useState({
-    input: {},
+    input: {
+      mapel: "",
+      judul: "",
+      link_soal: "",
+    },
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchSoalData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/soal/${id}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        // Assuming the API returns kelas as well, otherwise it's already available from useParams
+        setState({
+          input: {
+            mapel: data.mapel,
+            judul: data.judul,
+            link_soal: data.link_soal,
+          },
+        });
+      } catch (e) {
+        console.error("Failed to fetch Soal Ujian data:", e);
+        setError(e.message);
+        // Optionally, redirect or show a more prominent error message
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchSoalData();
+    }
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,39 +61,52 @@ export default function SoalUjianForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
     try {
-      const response = await fetch("/api/soal", {
-        method: "POST",
+      const response = await fetch(`/api/soal/${id}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          link_soal: state.input.link_soal,
-          kelas: kelas,
-          judul: state.input.judul,
-          mapel: state.input.mapel,
+          ...state.input, // Send all fields from state.input
+          kelas: kelas, // Ensure kelas is included from the URL param
         }),
       });
 
       if (response.ok) {
-        // Handle successful submission, e.g., redirect or show a success message
-        console.log("Data submitted successfully!");
-        // You might want to redirect the user, for example:
+        console.log("Data updated successfully!");
         navigate(`/office/soal_ujian/${kelas}`);
       } else {
-        // Handle errors
-        console.error("Error submitting data:", response.statusText);
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Gagal memperbarui data" }));
+        console.error("Error updating data:", response.statusText, errorData);
+        setError(
+          errorData.message ||
+            "Gagal memperbarui data. Status: " + response.statusText
+        );
       }
     } catch (error) {
       console.error("Error submitting data:", error);
+      setError("Terjadi kesalahan saat memperbarui data.");
     }
   };
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  // if (error) { // Optional: render a more prominent error message or component
+  //   return <p>Error loading data: {error}</p>;
+  // }
 
   return (
     <>
       <Card>
         <Card.Body className="p-4">
-          <h3>Tambah Soal Ujian Kelas {kelas}</h3>
+          <h3>Edit Soal Ujian Kelas {kelas}</h3>
+          {error && <p className="text-danger">{error}</p>}
           <Row>
             <Col xs={12} md={7}>
               <Form onSubmit={handleSubmit}>
@@ -92,7 +143,7 @@ export default function SoalUjianForm() {
                   <Col md={8}>
                     <Form.Control
                       as="textarea"
-                      name="link_soal"
+                      name="link_soal" // Ensure this matches state and payload
                       value={state.input.link_soal}
                       onChange={handleChange}
                       required
@@ -102,7 +153,7 @@ export default function SoalUjianForm() {
                 <Row>
                   <Col md={{ span: 8, offset: 4 }}>
                     <Button type="submit" className="me-2">
-                      <Save /> Simpan
+                      <Save /> Simpan Perubahan
                     </Button>
                     <Link
                       className="btn btn-outline-dark"
