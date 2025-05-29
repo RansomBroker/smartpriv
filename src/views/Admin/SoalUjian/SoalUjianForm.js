@@ -1,66 +1,111 @@
-import { useState } from "react";
-import { Button, Card, Col, Form, Row } from "react-bootstrap";
-import { Save } from "react-bootstrap-icons";
-import { Link, useParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 
-export default function SoalUjianForm() {
-    const {kelas} = useParams();
-    const [state, setState] = useState({
-        input: {}
-    })
+const SoalUjianForm = ({ onSubmit, initialData, isLoading, onCancel }) => {
+  const [formData, setFormData] = useState({
+    link_soal: "",
+    kelas: "1", // Default kelas
+    judul: "",
+  });
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setState((prevState) => ({
-            ...prevState,
-            input: {
-                ...prevState.input,
-                [name]: value,
-            }
-        }))
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    } else {
+      // Reset form when initialData is not provided (for new entries)
+      setFormData({ link_soal: "", kelas: "1", judul: "" });
     }
+  }, [initialData]);
 
-    const handleSubmit = (e) => {
-        e.preventDefault()
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.link_soal || !formData.judul || !formData.kelas) {
+      alert("Semua field harus diisi!");
+      return;
     }
+    onSubmit(formData);
+  };
 
-    return <>
-        <Card>
-            <Card.Body className="p-4">
+  return (
+    <div className="card mb-4">
+      <div className="card-body">
+        <h5 className="card-title">
+          {initialData ? "Edit Soal Ujian" : "Tambah Soal Ujian Baru"}
+        </h5>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label htmlFor="judul" className="form-label">
+              Judul Soal
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              id="judul"
+              name="judul"
+              value={formData.judul}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="link_soal" className="form-label">
+              Link Soal
+            </label>
+            <input
+              type="url"
+              className="form-control"
+              id="link_soal"
+              name="link_soal"
+              value={formData.link_soal}
+              onChange={handleChange}
+              placeholder="https://example.com/soal/matematika-bab-1"
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="kelas" className="form-label">
+              Kelas
+            </label>
+            <select
+              className="form-select"
+              id="kelas"
+              name="kelas"
+              value={formData.kelas}
+              onChange={handleChange}
+              required
+            >
+              {[1, 2, 3, 4, 5, 6].map((k) => (
+                <option key={k} value={String(k)}>{`Kelas ${k}`}</option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="submit"
+            className="btn btn-success me-2"
+            disabled={isLoading}
+          >
+            {isLoading
+              ? "Menyimpan..."
+              : initialData
+              ? "Update Soal"
+              : "Simpan Soal"}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={onCancel}
+            disabled={isLoading}
+          >
+            Batal
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
 
-                <h3>Tambah Soal Ujian Kelas {kelas}</h3>
-                <Row>
-                    <Col xs={12} md={7}>
-                        <Form onSubmit={handleSubmit}>
-                            <Form.Group as={Row} className="mb-2">
-                                <Form.Label column md={4}>Mapel</Form.Label>
-                                <Col md={8}>
-                                    <Form.Control name="mapel" value={state.input.mapel} onChange={handleChange} required />
-                                </Col>
-                            </Form.Group>
-                            <Form.Group as={Row} className="mb-2">
-                                <Form.Label column md={4}>Judul</Form.Label>
-                                <Col md={8}>
-                                    <Form.Control name="judul" value={state.input.judul} onChange={handleChange} required />
-                                </Col>
-                            </Form.Group>
-                            <Form.Group as={Row} className="mb-2">
-                                <Form.Label column md={4}>Link Soal</Form.Label>
-                                <Col md={8}>
-                                    <Form.Control as="textarea" value={state.input.link} onChange={handleChange} required />
-                                </Col>
-                            </Form.Group>
-                            <Row>
-                                <Col md={{ span: 8, offset: 4 }}>
-                                    <Button type="submit" className="me-2"><Save /> Simpan</Button>
-                                    <Link className="btn btn-outline-dark" to={`/office/soal_ujian/${kelas}`}>Batal</Link>
-                                </Col>
-                            </Row>
-                        </Form>
-
-                    </Col>
-                </Row>
-            </Card.Body>
-        </Card>
-    </>
-}
+export default SoalUjianForm;
