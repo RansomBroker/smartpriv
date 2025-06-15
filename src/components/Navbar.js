@@ -1,16 +1,28 @@
 // Navbar.js
 import { Image, Dropdown } from "react-bootstrap";
 import { useAuth } from "../libs/auth"; // pastikan path-nya sesuai
+import axios from "axios";
+
+const MOODLE_URL = "https://smartprivate.web.id";
 
 function Navbar() {
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {
+    try {
+      // Logout from Moodle first
+      await axios.get(`${MOODLE_URL}/login/logout.php`, {
+        withCredentials: true,
+      });
+    } catch (error) {
+      console.error("Error logging out from Moodle:", error);
+    }
+
+    // Then proceed with main app logout
     await logout();
   };
 
   console.log("User dari auth context:", user);
-
 
   return (
     <div className="d-flex justify-content-between align-items-center mb-4 p-4">

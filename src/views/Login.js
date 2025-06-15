@@ -39,7 +39,7 @@ function Login() {
     form.target = "hiddenMoodleLogin";
 
     form.innerHTML = `
-      <input type="hidden" name="username" value="Rafli" />
+      <input type="hidden" name="username" value="${username}" />
       <input type="hidden" name="password" value="@STUDENTs1" />
       <input type="hidden" name="logintoken" value="${logintoken}" />
     `;
@@ -72,7 +72,7 @@ function Login() {
         return false;
       }
 
-      loginToMoodleWithForm("Rafli", "@STUDENTs1", logintoken);
+      loginToMoodleWithForm(username, password, logintoken);
       return true;
     } catch (error) {
       console.error("Gagal login Moodle:", error);
