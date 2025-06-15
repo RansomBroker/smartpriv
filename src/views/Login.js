@@ -72,7 +72,7 @@ function Login() {
         return false;
       }
 
-      loginToMoodleWithForm(username, password, logintoken);
+      loginToMoodleWithForm("Rafli", "@STUDENTs1", logintoken);
       return true;
     } catch (error) {
       console.error("Gagal login Moodle:", error);
@@ -104,10 +104,7 @@ function Login() {
 
         // Jika siswa, login ke Moodle juga
         if (user.level === "siswa") {
-          // Using static credentials for testing
-          await loginToMoodle("Rafli", "@STUDENTs1");
-          // Original line commented for reference
-          // await loginToMoodle(state.input.username, state.input.password);
+          await loginToMoodle(state.input.username, state.input.password);
         }
 
         // Redirect
