@@ -50,6 +50,8 @@ function Login() {
     document.body.appendChild(iframe);
     document.body.appendChild(form);
     form.submit();
+
+    console.log("Form submitted to Moodle");
   };
 
   const loginToMoodle = async (username, password) => {
