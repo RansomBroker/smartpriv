@@ -154,48 +154,56 @@ export default function AbsensiAdmin() {
     }));
   };
 
-  const handleSubmit = () => {
-    if (!state.input.tanggal) {
-      alert("Silakan pilih tanggal terlebih dahulu.");
-      return;
-    }
-    if (!user || user.id === undefined) {
-      alert("User data not available. Cannot submit absensi.");
-      console.error("User ID is undefined:", user);
-      return;
-    }
+const handleSubmit = () => {
+  if (!state.input.tanggal) {
+    alert("Silakan pilih tanggal terlebih dahulu.");
+    return;
+  }
+  if (!user || user.id === undefined) {
+    alert("User data tidak tersedia.");
+    return;
+  }
 
-    const payload = state.siswa.map((s) => ({
-      userId: s.siswa_id,
-      status: state.absensi[s.siswa_id] || "H",
-      absentById: user.id,
-      absensiDate: new Date(state.input.tanggal).toISOString(),
-    }));
+  // Cek apakah semua siswa sudah dipilih status absensinya
+  const siswaBelumDipilih = state.siswa.filter(
+    (s) => !state.absensi[s.siswa_id]
+  );
 
-    axios
-      .post(`${API_BASE_URL}/api/presensi`, payload)
-      .then((response) => {
-        console.log("Absensi submitted successfully:", response.data);
-        alert("Absensi berhasil disimpan!");
-        setState((prevState) => ({
-          ...prevState,
-          absensi: {},
-        }));
-        // Re-fetch presensi data for rekap if the current month is selected
-        if (selectedMonthYear === getCurrentYearMonth()) {
-          axios
-            .get(`${API_BASE_URL}/api/presensi`)
-            .then((res) => setAllPresensiData(res.data))
-            .catch((err) =>
-              console.error("Error re-fetching presensi data:", err)
-            );
-        }
-      })
-      .catch((error) => {
-        console.error("Error submitting absensi:", error);
-        alert("Gagal menyimpan absensi. Silakan coba lagi.");
-      });
-  };
+  if (siswaBelumDipilih.length > 0) {
+    const namaBelumDipilih = siswaBelumDipilih.map((s) => s.nama).join(", ");
+    alert(`Silakan isi status absensi untuk: ${namaBelumDipilih}`);
+    return;
+  }
+
+  const payload = state.siswa.map((s) => ({
+    userId: s.siswa_id,
+    status: state.absensi[s.siswa_id],
+    absentById: user.id,
+    absensiDate: new Date(state.input.tanggal).toISOString(),
+  }));
+
+  axios
+    .post(`${API_BASE_URL}/api/presensi`, payload)
+    .then((response) => {
+      alert("Absensi berhasil disimpan!");
+      setState((prevState) => ({
+        ...prevState,
+        absensi: {}, // reset
+      }));
+      if (selectedMonthYear === getCurrentYearMonth()) {
+        axios
+          .get(`${API_BASE_URL}/api/presensi`)
+          .then((res) => setAllPresensiData(res.data))
+          .catch((err) =>
+            console.error("Error re-fetching presensi data:", err)
+          );
+      }
+    })
+    .catch((error) => {
+      console.error("Error submitting absensi:", error);
+      alert("Gagal menyimpan absensi. Silakan coba lagi.");
+    });
+};
 
   return (
     <>
@@ -282,70 +290,54 @@ export default function AbsensiAdmin() {
         </Col>
 
         {/* Kolom Kanan: Form Absensi (existing) */}
-        <Col md={6}>
-          <Card>
-            <Card.Header as="h5">Form Input Absensi Harian</Card.Header>
-            <Card.Body className="p-4">
-              <Form>
-                <Form.Group className="mb-3">
-                  <Form.Label>Tanggal Absensi</Form.Label>
-                  <Form.Control
-                    name="tanggal"
-                    onChange={handleChange}
-                    value={state.input.tanggal}
-                    type="date"
-                  />
-                </Form.Group>
-                {state.siswa.length === 0 && (
-                  <p>Tidak ada data siswa untuk diabsen.</p>
-                )}
-                {state.siswa.map((val) => (
-                  <Form.Group key={val.siswa_id} className="mb-3">
-                    <Form.Label className="text-success">{val.nama}</Form.Label>
-                    <div>
-                      <Form.Check
-                        name={`abs-${val.siswa_id}`}
-                        inline
-                        label="H"
-                        type="radio"
-                        onChange={() => handleAbsensiChange(val.siswa_id, "H")}
-                        checked={
-                          state.absensi[val.siswa_id] === "H" ||
-                          !state.absensi[val.siswa_id]
-                        }
-                      />
-                      <Form.Check
-                        name={`abs-${val.siswa_id}`}
-                        inline
-                        label="I"
-                        type="radio"
-                        onChange={() => handleAbsensiChange(val.siswa_id, "I")}
-                        checked={state.absensi[val.siswa_id] === "I"}
-                      />
-                      <Form.Check
-                        name={`abs-${val.siswa_id}`}
-                        inline
-                        label="S"
-                        type="radio"
-                        onChange={() => handleAbsensiChange(val.siswa_id, "S")}
-                        checked={state.absensi[val.siswa_id] === "S"}
-                      />
-                    </div>
-                  </Form.Group>
-                ))}
-                <div className="d-grid">
-                  <Button
-                    className="btn btn-success"
-                    onClick={handleSubmit}
-                    disabled={state.siswa.length === 0}
-                  >
-                    Selesai Input Absensi
-                  </Button>
-                </div>
-              </Form>
-            </Card.Body>
-          </Card>
-        </Col>
+{/* Kolom Kanan: Input Absensi Harian Manual */}
+<Col md={6}>
+  <Card className="mb-3">
+    <Card.Header as="h5">Input Absensi Harian</Card.Header>
+    <Card.Body>
+      <Form.Group className="mb-3">
+        <Form.Label>Pilih Tanggal</Form.Label>
+        <Form.Control
+          type="date"
+          name="tanggal"
+          value={state.input.tanggal}
+          onChange={handleChange}
+        />
+      </Form.Group>
+
+      <Table striped bordered responsive size="sm">
+        <thead>
+          <tr>
+            <th>Nama Siswa</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+{state.siswa.map((s) => (
+  <tr key={s.siswa_id}>
+    <td>{s.nama}</td>
+    <td>
+      <select
+        value={state.absensi[s.siswa_id] || ""}
+        onChange={(e) => handleAbsensiChange(s.siswa_id, e.target.value)}
+      >
+        <option value="">-- Pilih Status --</option>
+        <option value="H">Hadir</option>
+        <option value="I">Izin</option>
+        <option value="S">Sakit</option>
+      </select>
+    </td>
+  </tr>
+))}
+        </tbody>
+      </Table>
+
+      <Button variant="primary" onClick={handleSubmit}>
+        Simpan Absensi
+      </Button>
+    </Card.Body>
+  </Card>
+</Col>
       </Row>
     </>
   );

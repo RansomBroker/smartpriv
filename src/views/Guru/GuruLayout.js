@@ -24,9 +24,9 @@ export function GuruLayout() {
       text: "Soal Ujian",
     },
     {
-      to: "/guru/prestasi_siswa",
+      to: "/guru/rapot_siswa",
       image: "/assets/images/prestasi.png",
-      text: "Prestasi Siswa",
+      text: "Rapot Siswa",
     },
   ]);
 

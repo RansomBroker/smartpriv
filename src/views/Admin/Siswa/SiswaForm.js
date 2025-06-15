@@ -88,7 +88,6 @@ function SiswaForm() {
 
       // Remove fields that shouldn't be sent to API
       delete payload.password_confirmation;
-      delete payload.kelas; // Remove kelas from payload
 
       // Remove password if empty in edit mode
       if (isEdit && !payload.password) {

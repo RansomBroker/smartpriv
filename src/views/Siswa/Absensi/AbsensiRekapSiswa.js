@@ -1,15 +1,17 @@
+// src/components/siswa/absensi/AbsensiRekapSiswa.jsx
+
 import { useEffect, useState } from "react";
 import { Card, Col, Form, Row, Table } from "react-bootstrap";
-import { useAuth } from "../../../libs/auth";
 import axios from "axios";
+import { useAuth } from "../../../libs/auth";
 
-// Define API base URL based on environment
+// API base URL
 const API_BASE_URL =
   process.env.NODE_ENV === "production"
     ? "https://api.smartprivate.web.id"
-    : ""; // For development, proxy will be used
+    : "";
 
-// Helper to get current YYYY-MM
+// Helper: get current year and month in YYYY-MM format
 const getCurrentYearMonth = () => {
   const now = new Date();
   const year = now.getFullYear();
@@ -17,6 +19,7 @@ const getCurrentYearMonth = () => {
   return `${year}-${month}`;
 };
 
+// Helper: get number of days in a given month
 const getDaysInMonth = (year, month) => {
   return new Date(year, month, 0).getDate();
 };
@@ -24,25 +27,19 @@ const getDaysInMonth = (year, month) => {
 export function AbsensiRekapSiswa() {
   const { user: loggedInUser, loading: authLoading } = useAuth();
 
-  const [selectedMonthYear, setSelectedMonthYear] = useState(
-    getCurrentYearMonth()
-  );
+  const [selectedMonthYear, setSelectedMonthYear] = useState(getCurrentYearMonth());
   const [allMyPresensiData, setAllMyPresensiData] = useState([]);
-
-  // Data for the table: one entry for each day of the selected month
   const [daysInMonthViewData, setDaysInMonthViewData] = useState([]);
-  // Summary for the selected month
   const [monthlySummary, setMonthlySummary] = useState({
     hadir: 0,
     izin: 0,
     sakit: 0,
   });
-
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch all presensi data for the logged-in user
+  // Fetch presensi data for logged-in user
   useEffect(() => {
-    if (loggedInUser && loggedInUser.id) {
+    if (loggedInUser?.id) {
       setIsLoading(true);
       axios
         .get(`${API_BASE_URL}/api/presensi`)
@@ -53,92 +50,74 @@ export function AbsensiRekapSiswa() {
           setAllMyPresensiData(myData);
         })
         .catch((error) => {
-          console.error("Error fetching my presensi data:", error);
+          console.error("Error fetching presensi:", error);
           setAllMyPresensiData([]);
         })
-        .finally(() => {
-          setIsLoading(false);
-        });
+        .finally(() => setIsLoading(false));
     }
   }, [loggedInUser]);
 
-  // Process data for table display and monthly summary when selectedMonthYear or allMyPresensiData changes
+  // Process view data and summary whenever month or data changes
   useEffect(() => {
-    if (selectedMonthYear && allMyPresensiData) {
-      const [year, monthNum] = selectedMonthYear.split("-").map(Number);
-      const numDays = getDaysInMonth(year, monthNum);
-      const newDaysInMonthViewData = [];
-      let hadirCount = 0;
-      let izinCount = 0;
-      let sakitCount = 0;
+    if (!selectedMonthYear || !allMyPresensiData) return;
 
-      for (let day = 1; day <= numDays; day++) {
-        const dayData = {
-          dayOfMonth: day,
-          h: false,
-          i: false,
-          s: false,
-          absent_by: null,
-        };
-        // Find if there's an attendance record for this specific day
-        const recordForDay = allMyPresensiData.find((p) => {
-          const presensiDate = new Date(p.absensiDate);
-          return (
-            presensiDate.getFullYear() === year &&
-            presensiDate.getMonth() + 1 === monthNum &&
-            presensiDate.getDate() === day
-          );
-        });
+    const [year, month] = selectedMonthYear.split("-").map(Number);
+    const numDays = getDaysInMonth(year, month);
 
-        if (recordForDay) {
-          if (recordForDay.status === "H") dayData.h = true;
-          if (recordForDay.status === "I") dayData.i = true;
-          if (recordForDay.status === "S") dayData.s = true;
-          dayData.absent_by = recordForDay.absent_by?.name || "N/A";
-        }
-        newDaysInMonthViewData.push(dayData);
+    const newDaysView = [];
+    let hadir = 0,
+      izin = 0,
+      sakit = 0;
+
+    for (let day = 1; day <= numDays; day++) {
+      const entry = {
+        dayOfMonth: day,
+        h: false,
+        i: false,
+        s: false,
+        absent_by: null,
+      };
+
+      const record = allMyPresensiData.find((p) => {
+        const d = new Date(p.absensiDate);
+        return d.getFullYear() === year && d.getMonth() + 1 === month && d.getDate() === day;
+      });
+
+      if (record) {
+        if (record.status === "H") entry.h = true;
+        if (record.status === "I") entry.i = true;
+        if (record.status === "S") entry.s = true;
+        entry.absent_by = record.absent_by?.name || "N/A";
       }
-      setDaysInMonthViewData(newDaysInMonthViewData);
 
-      // Calculate monthly summary from all records in that month
-      const recordsThisMonth = allMyPresensiData.filter((p) => {
-        const presensiDate = new Date(p.absensiDate);
-        return (
-          presensiDate.getFullYear() === year &&
-          presensiDate.getMonth() + 1 === monthNum
-        );
-      });
-      hadirCount = recordsThisMonth.filter((p) => p.status === "H").length;
-      izinCount = recordsThisMonth.filter((p) => p.status === "I").length;
-      sakitCount = recordsThisMonth.filter((p) => p.status === "S").length;
-      setMonthlySummary({
-        hadir: hadirCount,
-        izin: izinCount,
-        sakit: sakitCount,
-      });
-    } else {
-      setDaysInMonthViewData([]);
-      setMonthlySummary({ hadir: 0, izin: 0, sakit: 0 });
+      newDaysView.push(entry);
     }
+
+    const recordsThisMonth = allMyPresensiData.filter((p) => {
+      const d = new Date(p.absensiDate);
+      return d.getFullYear() === year && d.getMonth() + 1 === month;
+    });
+
+    hadir = recordsThisMonth.filter((p) => p.status === "H").length;
+    izin = recordsThisMonth.filter((p) => p.status === "I").length;
+    sakit = recordsThisMonth.filter((p) => p.status === "S").length;
+
+    setDaysInMonthViewData(newDaysView);
+    setMonthlySummary({ hadir, izin, sakit });
   }, [allMyPresensiData, selectedMonthYear]);
 
   if (authLoading || isLoading) {
     return (
-      <div
-        className="p-4 d-flex justify-content-center align-items-center"
-        style={{ height: "80vh" }}
-      >
+      <div className="p-4 d-flex justify-content-center align-items-center" style={{ height: "80vh" }}>
         Loading absensi data...
       </div>
     );
   }
-  if (!loggedInUser || !loggedInUser.id) {
+
+  if (!loggedInUser?.id) {
     return (
       <div className="p-4">
-        <p>
-          User tidak terautentikasi atau data tidak ditemukan. Silakan login
-          kembali.
-        </p>
+        <p>User tidak terautentikasi. Silakan login kembali.</p>
       </div>
     );
   }
@@ -167,7 +146,7 @@ export function AbsensiRekapSiswa() {
       </h3>
 
       <Row>
-        <Col md="5">
+        <Col md={5}>
           {daysInMonthViewData.length > 0 ? (
             <Table striped bordered hover responsive size="sm">
               <thead>
@@ -179,61 +158,44 @@ export function AbsensiRekapSiswa() {
                 </tr>
               </thead>
               <tbody>
-                {daysInMonthViewData.map((dayEntry) => (
-                  <tr key={dayEntry.dayOfMonth}>
-                    <td>{dayEntry.dayOfMonth}</td>
+                {daysInMonthViewData.map((day) => (
+                  <tr key={day.dayOfMonth}>
+                    <td>{day.dayOfMonth}</td>
                     <td>
-                      <Form.Check
-                        type="checkbox"
-                        checked={dayEntry.h}
-                        disabled
-                      />
+                      <Form.Check type="checkbox" checked={day.h} disabled />
                     </td>
                     <td>
-                      <Form.Check
-                        type="checkbox"
-                        checked={dayEntry.i}
-                        disabled
-                      />
+                      <Form.Check type="checkbox" checked={day.i} disabled />
                     </td>
                     <td>
-                      <Form.Check
-                        type="checkbox"
-                        checked={dayEntry.s}
-                        disabled
-                      />
+                      <Form.Check type="checkbox" checked={day.s} disabled />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </Table>
           ) : (
-            <p>Tidak ada data absensi untuk ditampilkan pada bulan ini.</p>
+            <p>Tidak ada data absensi bulan ini.</p>
           )}
         </Col>
-        <Col md="7">
+
+        <Col md={7}>
           <Card className="mb-2">
-            <Card.Body>
-              <div className="d-flex flex-column align-items-center">
-                <h5>Total Hadir</h5>
-                <h4 className="fw-bold">{monthlySummary.hadir}</h4>
-              </div>
+            <Card.Body className="text-center">
+              <h5>Total Hadir</h5>
+              <h4 className="fw-bold">{monthlySummary.hadir}</h4>
             </Card.Body>
           </Card>
           <Card className="mb-2">
-            <Card.Body>
-              <div className="d-flex flex-column align-items-center">
-                <h5>Total Izin</h5>
-                <h4 className="fw-bold">{monthlySummary.izin}</h4>
-              </div>
+            <Card.Body className="text-center">
+              <h5>Total Izin</h5>
+              <h4 className="fw-bold">{monthlySummary.izin}</h4>
             </Card.Body>
           </Card>
           <Card>
-            <Card.Body>
-              <div className="d-flex flex-column align-items-center">
-                <h5>Total Sakit</h5>
-                <h4 className="fw-bold">{monthlySummary.sakit}</h4>
-              </div>
+            <Card.Body className="text-center">
+              <h5>Total Sakit</h5>
+              <h4 className="fw-bold">{monthlySummary.sakit}</h4>
             </Card.Body>
           </Card>
         </Col>

@@ -1,5 +1,6 @@
+// Navbar.js
 import { Image, Dropdown } from "react-bootstrap";
-import { useAuth } from "../libs/auth";
+import { useAuth } from "../libs/auth"; // pastikan path-nya sesuai
 
 function Navbar() {
   const { user, logout } = useAuth();
@@ -8,9 +9,13 @@ function Navbar() {
     await logout();
   };
 
+  console.log("User dari auth context:", user);
+
+
   return (
     <div className="d-flex justify-content-between align-items-center mb-4 p-4">
-      <h2 className="h4 fw-bold"></h2>
+      <h2 className="h4 fw-bold">Dashboard</h2>
+
       <div className="d-flex align-items-center">
         <input
           type="text"
@@ -27,15 +32,17 @@ function Navbar() {
             className="d-flex align-items-center border-0 bg-transparent shadow-none"
           >
             <Image
-              src="/assets/images/user.jpg"
+              src={user?.foto || "/assets/images/user.jpg"}
               className="rounded-circle me-2"
               height={30}
               width={30}
               alt="User"
             />
             <div className="text-start">
-              <p className="mb-0 fw-bold">{user?.nama || 'User'}</p>
-              <p className="mb-0 small text-muted">{user?.level || 'User'}</p>
+              <p className="mb-0 fw-bold">{user?.name || user?.username}</p>
+              <p className="mb-0 small text-muted text-capitalize">
+                {user?.level || "Level tidak diketahui"}
+              </p>
             </div>
           </Dropdown.Toggle>
 
@@ -48,4 +55,4 @@ function Navbar() {
   );
 }
 
-export default Navbar; 
+export default Navbar;

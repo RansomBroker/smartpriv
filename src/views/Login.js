@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Row,
   Container,
@@ -11,6 +10,10 @@ import {
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../libs/auth";
+import { useState } from "react";
+import axios from "axios";
+
+const MOODLE_URL = "https://smartprivate.web.id";
 
 function Login() {
   const navigate = useNavigate();
@@ -29,6 +32,52 @@ function Login() {
     }));
   };
 
+  const loginToMoodle = async (username, password) => {
+    try {
+      // First, get the login page to extract the token
+      const loginPageResponse = await axios.get(
+        `${MOODLE_URL}/login/index.php`,
+        {
+          withCredentials: true,
+        }
+      );
+
+      // Extract logintoken using string manipulation since we can't use jQuery
+      const html = loginPageResponse.data;
+      const tokenMatch = html.match(/name="logintoken"\s+value="([^"]+)"/);
+      const logintoken = tokenMatch ? tokenMatch[1] : null;
+
+      if (!logintoken) {
+        console.error("Could not find Moodle login token");
+        return;
+      }
+
+      // Create form data for Moodle login
+      const formData = new FormData();
+      formData.append("username", username);
+      formData.append("password", password);
+      formData.append("logintoken", logintoken);
+
+      // Perform Moodle login
+      const moodleResponse = await axios.post(
+        `${MOODLE_URL}/login/index.php`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          withCredentials: true,
+        }
+      );
+
+      console.log("Moodle login successful");
+      return true;
+    } catch (error) {
+      console.error("Moodle login error:", error);
+      return false;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -36,18 +85,24 @@ function Login() {
 
     try {
       const result = await login(state.input.username, state.input.password);
-      
+
       if (result.success) {
         const user = result.user;
-        
+
         // Store user data in localStorage for backward compatibility
         localStorage.setItem("level", user.level);
         localStorage.setItem("user_id", user.id);
         localStorage.setItem("user_nama", user.nama);
-        
+        localStorage.setItem("user", JSON.stringify(user));
+
         if (user.level === "guru") {
           localStorage.setItem("user_nohp", user.nohp);
           localStorage.setItem("user_alamat", user.alamat);
+        }
+
+        // If user is a student, also login to Moodle
+        if (user.level === "siswa") {
+          await loginToMoodle("Raflie", "@STUDENTs1");
         }
 
         // Redirect based on user level
@@ -133,7 +188,6 @@ function Login() {
                   </div>
                 </Col>
               </Row>
-
             </Form>
           </div>
         </Col>

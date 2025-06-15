@@ -1,22 +1,22 @@
-import { createContext, useEffect, useState, useContext } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-// Define API base URL based on environment
+// API base URL
 const API_BASE_URL =
   process.env.NODE_ENV === "production"
-    ? "https://api.smartprivate.web.id/api"
-    : "/api"; // For development, proxy will be used, ensure this matches existing logic for instance
+    ? "https://api.smartprivate.web.id"
+    : "http://localhost:3000";
 
-// Create axios instance with base URL
+// Axios instance
 const api = axios.create({
-  baseURL: API_BASE_URL, // Use the dynamic API_BASE_URL
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Add request interceptor to add auth token
+// Tambahkan token ke setiap request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("authToken");
   if (token) {
@@ -25,6 +25,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Context & hook
 export const AuthContext = createContext(null);
 
 export const useAuth = () => {
@@ -35,57 +36,58 @@ export const useAuth = () => {
   return context;
 };
 
+// Ambil detail user berdasarkan level
+const fetchUserDetail = async (level, id) => {
+  try {
+    const res = await api.get(`/api/${level}/${id}`);
+    console.log("Detail user dari API:", res.data);
+    return res.data;
+  } catch (error) {
+    console.error(`Gagal ambil detail user level ${level}:`, error);
+    return {};
+  }
+};
+
+// Service auth
 export const authService = {
   async login(username, password) {
     try {
-      const response = await api.post("/auth", { username, password });
+      const response = await api.post("/api/auth", { username, password });
       const { token, user } = response.data;
+      console.log("User dari login API:", response.data);
 
-      // Store auth data
       localStorage.setItem("authToken", token);
-      localStorage.setItem("user", JSON.stringify(user));
 
-      return { success: true, user };
+      // Ambil detail user (misalnya nama)
+      const detail = await fetchUserDetail(user.level, user.id);
+
+      // Gabungkan data login + detail
+      const userWithDetail = { ...user, ...detail };
+      console.log("User lengkap dengan nama:", userWithDetail);
+
+      localStorage.setItem("user", JSON.stringify(userWithDetail));
+      return { success: true, user: userWithDetail };
     } catch (error) {
       console.error("Login error:", error);
       return {
         success: false,
-        error: error.response?.data?.message || "Login failed",
+        error: error.response?.data?.message || "Login gagal",
       };
     }
   },
 
   async logout() {
-    try {
-      await api.post("/auth/logout");
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      // Clear auth data regardless of API call success
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("user");
-      localStorage.removeItem("level");
-      localStorage.removeItem("user_id");
-      localStorage.removeItem("user_nama");
-      localStorage.removeItem("user_nohp");
-      localStorage.removeItem("user_alamat");
-    }
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
   },
 
   async checkAuth() {
-    try {
-      const token = localStorage.getItem("authToken");
-      if (!token) return { isAuthenticated: false };
-
-      const response = await api.get("/auth/me");
-      return {
-        isAuthenticated: true,
-        user: response.data,
-      };
-    } catch (error) {
-      console.error("Auth check error:", error);
-      return { isAuthenticated: false };
-    }
+    const token = localStorage.getItem("authToken");
+    const user = this.getStoredUser();
+    return {
+      isAuthenticated: !!token && !!user,
+      user,
+    };
   },
 
   getStoredUser() {
@@ -98,6 +100,7 @@ export const authService = {
   },
 };
 
+// Provider
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -105,43 +108,20 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const initAuth = async () => {
-      try {
-        // First check if we have stored user data
-        const storedUser = authService.getStoredUser();
-        const token = localStorage.getItem("authToken");
+      const token = localStorage.getItem("authToken");
+      const storedUser = authService.getStoredUser();
 
-        if (token && storedUser) {
-          // If we have both token and stored user, set it immediately
-          setUser(storedUser);
-
-          // Then verify with API in the background
-          try {
-            const response = await api.get("/auth/me");
-            setUser(response.data);
-          } catch (error) {
-            console.error("Auth verification failed:", error);
-            // Only logout if token is invalid
-            if (error.response?.status === 401) {
-              authService.logout();
-              setUser(null);
-            }
-          }
-        } else {
-          // No stored data, clear any stale data
-          authService.logout();
-          setUser(null);
-        }
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-        authService.logout();
+      if (token && storedUser) {
+        setUser(storedUser);
+      } else {
+        await authService.logout();
         setUser(null);
-      } finally {
-        setLoading(false);
       }
+      setLoading(false);
     };
 
     initAuth();
-  }, []); // Remove navigate dependency to prevent unnecessary re-renders
+  }, []);
 
   const login = async (username, password) => {
     const result = await authService.login(username, password);
@@ -165,10 +145,7 @@ export function AuthProvider({ children }) {
     isAuthenticated: authService.isAuthenticated,
   };
 
-  // Don't render anything during initial loading
-  if (loading) {
-    return null;
-  }
+  if (loading) return null;
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

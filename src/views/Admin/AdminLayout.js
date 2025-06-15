@@ -24,9 +24,9 @@ export function AdminLayout() {
       text: "Soal Ujian",
     },
     {
-      to: "/office/prestasi_siswa",
+      to: "/office/rapot_siswa",
       image: "/assets/images/prestasi.png",
-      text: "Prestasi Siswa",
+      text: "Rapot Siswa",
     },
   ]);
 

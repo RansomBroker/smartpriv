@@ -59,4 +59,48 @@ const SoalUjianDataSiswa = ({ soalList }) => {
   );
 };
 
+const SoalUjianSiswa = () => {
+  const siswa = {
+    username: "azkayla",
+    password: "@STUDENTs1",
+    courses: [
+      { id: 216, nama: "Matematika" },
+      { id: 217, nama: "IPA" },
+      { id: 218, nama: "Bahasa Indonesia" },
+    ],
+  };
+
+  return (
+    <div className="p-4">
+      <h2 className="text-xl font-semibold mb-4">Tugas yang Harus Dikerjakan</h2>
+      <div className="space-y-3">
+        {siswa.courses.map((course) => (
+          <form
+            key={course.id}
+            action="https://smartprivate.web.id/login/index.php"
+            method="post"
+            target="_blank"
+          >
+            <input type="hidden" name="username" value={siswa.username} />
+            <input type="hidden" name="password" value={siswa.password} />
+            <input type="hidden" name="rememberusername" value="1" />
+            <input
+              type="hidden"
+              name="redirect"
+              value={`https://smartprivate.web.id/course/section.php?id=${course.id}`}
+            />
+            <button
+              type="submit"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              Masuk ke {course.nama}
+            </button>
+          </form>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
 export default SoalUjianDataSiswa;

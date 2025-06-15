@@ -27,10 +27,10 @@ import SiswaDashboard from "./views/Siswa/Dashboard/SiswaDashboard";
 import SoalUjianDataSiswa from "./views/Siswa/SoalUjian/SoalUjianDataSiswa";
 import SoalUjianSiswa from "./views/Siswa/SoalUjian/SoalUjianSiswa";
 import { AbsensiRekapSiswa } from "./views/Siswa/Absensi/AbsensiRekapSiswa";
-import { PrestasiRekapSiswa } from "./views/Siswa/Prestasi/PrestasiRekapSiswa";
-//import PrestasiRekapSiswa from './views/Siswa/PrestasiRekapSiswa';
-import PrestasiForm from "./views/Admin/Prestasi/PrestasiForm";
-import PrestasiData from "./views/Admin/Prestasi/PrestasiData";
+import RapotRekapSiswa from "./views/Siswa/Rapot/RapotRekapSiswa";
+import RapotGuru from "./views/Guru/Rapot/RapotGuru";
+import RapotForm from "./views/Admin/Rapot/RapotForm";
+import RapotData from "./views/Admin/Rapot/RapotData";
 import GuruProfile from "./views/Admin/Guru/GuruProfile";
 import { GuruLayout } from "./views/Guru/GuruLayout";
 import SoalUjianEditForm from "./views/Admin/SoalUjian/SoalUjianEditForm";
@@ -125,8 +125,8 @@ function AppRoutes() {
       >
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="dashboard/guru" element={<GuruDashboard />} />
-        <Route path="prestasi_siswa/add" element={<PrestasiForm />} />
-        <Route path="prestasi_siswa" element={<PrestasiData />} />
+        <Route path="rapot_siswa/add" element={<RapotForm />} />
+        <Route path="rapot_siswa" element={<RapotData />} />
         <Route path="guru/add" element={<GuruForm />} />
         <Route path="guru/edit/:id" element={<GuruForm />} />
         <Route path="guru" element={<GuruData />} />
@@ -141,7 +141,7 @@ function AppRoutes() {
           element={<SoalUjianEditForm />}
         />
         <Route path="soal_ujian" element={<SoalUjian />} />
-        <Route path="prestasi_siswa/edit/:id" element={<PrestasiForm />} />
+        <Route path="rapot_siswa/edit/:id" element={<RapotForm />} />
       </Route>
 
       <Route
@@ -158,9 +158,9 @@ function AppRoutes() {
         <Route path="siswa/edit/:id" element={<SiswaForm />} />
         <Route path="siswa" element={<SiswaData />} />
         <Route path="absensi" element={<AbsensiGuru />} />
-        <Route path="prestasi_siswa/add" element={<PrestasiForm />} />
-        <Route path="prestasi_siswa/edit/:id" element={<PrestasiForm />} />
-        <Route path="prestasi_siswa" element={<PrestasiData />} />
+        <Route path="rapot_siswa/add" element={<RapotForm />} />
+        <Route path="rapot_siswa/edit/:id" element={<RapotForm />} />
+        <Route path="rapot_siswa" element={<RapotData />} />
         <Route path="soal_ujian/:kelas/add" element={<SoalUjianForm />} />
         <Route path="soal_ujian/:kelas" element={<SoalUjianData />} />
         <Route
@@ -180,7 +180,7 @@ function AppRoutes() {
       >
         <Route path="dashboard" element={<SiswaDashboard />} />
         <Route path="absensi" element={<AbsensiRekapSiswa />} />
-        <Route path="rekap_prestasi" element={<PrestasiRekapSiswa />} />
+        <Route path="rekap_rapot" element={<RapotRekapSiswa />} />
         <Route path="soal_ujian/:kelas" element={<SoalUjianData />} />
         <Route path="soal_ujian" element={<SoalUjian />} />
       </Route>

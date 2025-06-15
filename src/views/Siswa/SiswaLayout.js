@@ -22,9 +22,9 @@ export function SiswaLayout({ component }) {
       text: "Soal Ujian",
     },
     {
-      to: "/siswa/rekap_prestasi",
+      to: "/siswa/rekap_rapot",
       image: "/assets/images/prestasi.png",
-      text: "Rekap Prestasi",
+      text: "Rekap Rapot",
     },
   ]);
 

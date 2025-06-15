@@ -1,52 +1,57 @@
 import { Badge, Card } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import { Pencil, Plus, Trash } from "react-bootstrap-icons";
 import SweetAlert2 from "react-sweetalert2";
 import axios from "axios";
 
-// Define API base URL based on environment
 const API_BASE_URL =
   process.env.NODE_ENV === "production"
     ? "https://api.smartprivate.web.id"
-    : "http://localhost:3000";
+    : "";
 
-function SiswaData() {
+function RapotData() {
   const navigate = useNavigate();
   const [datas, setDatas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
   const [swalProps, setSwalProps] = useState({
     show: false,
     onConfirmHandle: () => {},
   });
 
-  // Fetch siswa data
-  const fetchSiswaData = async () => {
+  useEffect(() => {
+    // Get user data from localStorage
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const userData = JSON.parse(userStr);
+      setCurrentUser(userData);
+    }
+  }, []);
+
+  const fetchRapot = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/user`);
-      // Filter users with level "siswa"
-      const siswaData = response.data.filter((user) => user.level === "siswa");
-      setDatas(siswaData);
+      const response = await axios.get(`${API_BASE_URL}/api/rapot`);
+      setDatas(response.data);
     } catch (error) {
-      console.error("Error fetching siswa data:", error);
+      console.error("Error fetching rapot:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSiswaData();
+    fetchRapot();
   }, []);
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${API_BASE_URL}/api/user/${id}`);
-      // Refresh data after successful deletion
-      fetchSiswaData();
+      await axios.delete(`${API_BASE_URL}/api/rapot/${id}`);
+      fetchRapot();
       setSwalProps({ show: false });
     } catch (error) {
-      console.error("Error deleting siswa:", error);
+      console.error("Error deleting rapot:", error);
     }
   };
 
@@ -61,6 +66,9 @@ function SiswaData() {
     });
   };
 
+  // Get base path for navigation based on user role
+  const basePath = currentUser?.level === "guru" ? "/guru" : "/office";
+
   const columns = [
     {
       name: "No",
@@ -68,27 +76,22 @@ function SiswaData() {
       width: "70px",
     },
     {
-      name: "Username",
-      selector: (row) => row.username,
+      name: "Nama Siswa",
+      selector: (row) => row.user?.name || row.user?.username || "-",
       sortable: true,
     },
     {
-      name: "Nama",
-      selector: (row) => row.name,
+      name: "Mapel",
+      selector: (row) => row.mapel || "-",
       sortable: true,
     },
     {
-      name: "Kelas",
-      selector: (row) => row.kelas || "-",
-      sortable: true,
+      name: "Nilai",
+      selector: (row) => row.nilai || "-",
     },
     {
-      name: "No HP",
-      selector: (row) => row.nohp,
-    },
-    {
-      name: "Alamat",
-      selector: (row) => row.alamat,
+      name: "Semester",
+      selector: (row) => row.semester || "-",
     },
     {
       name: "Aksi",
@@ -97,7 +100,7 @@ function SiswaData() {
           <Badge
             bg="primary"
             role="button"
-            onClick={() => navigate(`/office/siswa/edit/${row.id}`)}
+            onClick={() => navigate(`${basePath}/rapot_siswa/edit/${row.id}`)}
           >
             <Pencil />
           </Badge>
@@ -120,15 +123,13 @@ function SiswaData() {
       <Card>
         <Card.Body className="p-4">
           <div className="d-flex flex-row justify-content-between">
-            <h3>Data Siswa</h3>
-            <div>
-              <Link
-                to="/office/siswa/add"
-                className="btn btn-outline-dark px-3"
-              >
-                <Plus /> Add
-              </Link>
-            </div>
+            <h3>Data Rapot Siswa</h3>
+            <Link
+              to={`${basePath}/rapot_siswa/add`}
+              className="btn btn-outline-dark px-3"
+            >
+              <Plus /> Tambah
+            </Link>
           </div>
 
           <div className="my-5">
@@ -147,4 +148,4 @@ function SiswaData() {
   );
 }
 
-export default SiswaData;
+export default RapotData;
