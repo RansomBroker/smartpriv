@@ -1,4 +1,5 @@
 // Navbar.js
+import { useEffect, useState } from "react";
 import { Image, Dropdown } from "react-bootstrap";
 import { useAuth } from "../libs/auth"; // pastikan path-nya sesuai
 import axios from "axios";
@@ -7,22 +8,50 @@ const MOODLE_URL = "https://smartprivate.web.id";
 
 function Navbar() {
   const { user, logout } = useAuth();
+  const [sesskey, setSesskey] = useState(null);
+
+  // Ambil sesskey setelah login Moodle
+  useEffect(() => {
+    const fetchSesskey = async () => {
+      try {
+        const res = await axios.get(`${MOODLE_URL}/my/`, {
+          withCredentials: true,
+        });
+
+        const html = res.data;
+        const match = html.match(/"sesskey":"([^"]+)"/);
+        const foundSesskey = match ? match[1] : null;
+
+        if (foundSesskey) {
+          setSesskey(foundSesskey);
+        } else {
+          console.warn("Sesskey tidak ditemukan.");
+        }
+      } catch (error) {
+        console.error("Gagal mengambil sesskey Moodle:", error);
+      }
+    };
+
+    fetchSesskey();
+  }, []);
 
   const handleLogout = async () => {
     try {
-      // Logout from Moodle first
-      await axios.get(`${MOODLE_URL}/login/logout.php`, {
-        withCredentials: true,
-      });
+      if (sesskey) {
+        await axios.get(`${MOODLE_URL}/login/logout.php?sesskey=${sesskey}`, {
+          withCredentials: true,
+        });
+        console.log("Berhasil logout dari Moodle.");
+      } else {
+        console.warn("Sesskey belum tersedia. Tidak bisa logout dari Moodle.");
+      }
     } catch (error) {
       console.error("Error logging out from Moodle:", error);
     }
 
-    // Then proceed with main app logout
+    // Logout dari app utama
     await logout();
   };
-
-  console.log("User dari auth context:", user);
 
   return (
     <div className="d-flex justify-content-between align-items-center mb-4 p-4">
@@ -37,7 +66,6 @@ function Navbar() {
         <i className="fas fa-envelope text-muted me-3"></i>
         <i className="fas fa-bell text-muted me-3"></i>
 
-        {/* Dropdown */}
         <Dropdown align="end">
           <Dropdown.Toggle
             variant="light"
