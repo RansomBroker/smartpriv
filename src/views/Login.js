@@ -104,7 +104,10 @@ function Login() {
 
         // Jika siswa, login ke Moodle juga
         if (user.level === "siswa") {
-          await loginToMoodle(state.input.username, state.input.password);
+          // Using static credentials for testing
+          await loginToMoodle("Rafli", "@STUDENTs1");
+          // Original line commented for reference
+          // await loginToMoodle(state.input.username, state.input.password);
         }
 
         // Redirect
