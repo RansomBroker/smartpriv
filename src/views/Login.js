@@ -32,9 +32,28 @@ function Login() {
     }));
   };
 
+  const loginToMoodleWithForm = (username, password, logintoken) => {
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = `${MOODLE_URL}/login/index.php`;
+    form.target = "hiddenMoodleLogin";
+
+    form.innerHTML = `
+      <input type="hidden" name="username" value="${username}" />
+      <input type="hidden" name="password" value="${password}" />
+      <input type="hidden" name="logintoken" value="${logintoken}" />
+    `;
+
+    const iframe = document.createElement("iframe");
+    iframe.name = "hiddenMoodleLogin";
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+    document.body.appendChild(form);
+    form.submit();
+  };
+
   const loginToMoodle = async (username, password) => {
     try {
-      // First, get the login page to extract the token
       const loginPageResponse = await axios.get(
         `${MOODLE_URL}/login/index.php`,
         {
@@ -42,38 +61,19 @@ function Login() {
         }
       );
 
-      // Extract logintoken using string manipulation since we can't use jQuery
       const html = loginPageResponse.data;
       const tokenMatch = html.match(/name="logintoken"\s+value="([^"]+)"/);
       const logintoken = tokenMatch ? tokenMatch[1] : null;
 
       if (!logintoken) {
-        console.error("Could not find Moodle login token");
-        return;
+        console.error("Login token Moodle tidak ditemukan.");
+        return false;
       }
 
-      // Create form data for Moodle login
-      const formData = new FormData();
-      formData.append("username", username);
-      formData.append("password", password);
-      formData.append("logintoken", logintoken);
-
-      // Perform Moodle login
-      const moodleResponse = await axios.post(
-        `${MOODLE_URL}/login/index.php`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          withCredentials: true,
-        }
-      );
-
-      console.log("Moodle login successful");
+      loginToMoodleWithForm(username, password, logintoken);
       return true;
     } catch (error) {
-      console.error("Moodle login error:", error);
+      console.error("Gagal login Moodle:", error);
       return false;
     }
   };
@@ -89,7 +89,7 @@ function Login() {
       if (result.success) {
         const user = result.user;
 
-        // Store user data in localStorage for backward compatibility
+        // Simpan user ke localStorage
         localStorage.setItem("level", user.level);
         localStorage.setItem("user_id", user.id);
         localStorage.setItem("user_nama", user.nama);
@@ -100,12 +100,12 @@ function Login() {
           localStorage.setItem("user_alamat", user.alamat);
         }
 
-        // If user is a student, also login to Moodle
+        // Jika siswa, login ke Moodle juga
         if (user.level === "siswa") {
-          await loginToMoodle("Raflie", "@STUDENTs1");
+          await loginToMoodle(state.input.username, state.input.password);
         }
 
-        // Redirect based on user level
+        // Redirect
         if (user.level === "siswa") {
           navigate(`/siswa/dashboard`);
         } else if (user.level === "guru") {
@@ -122,10 +122,6 @@ function Login() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleBack = () => {
-    navigate("/");
   };
 
   return (
