@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, Table, Form, Spinner } from "react-bootstrap";
 import axios from "axios";
+import { useAuth } from "../../../libs/auth";
 
 const API_BASE_URL =
   process.env.NODE_ENV === "production"
@@ -8,24 +9,19 @@ const API_BASE_URL =
     : "";
 
 function RapotRekapSiswa() {
+  const { user: currentUser } = useAuth();
   const [data, setData] = useState([]);
   const [siswaList, setSiswaList] = useState([]);
   const [selectedSiswa, setSelectedSiswa] = useState("");
   const [semester, setSemester] = useState("1");
   const [loading, setLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    // Get user data from localStorage
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
-      const userData = JSON.parse(userStr);
-      setCurrentUser(userData);
-      if (userData.level === "siswa") {
-        setSelectedSiswa(userData.id.toString());
-      }
+    // Set selectedSiswa based on current user
+    if (currentUser?.level === "siswa" && currentUser?.id) {
+      setSelectedSiswa(currentUser.id.toString());
     }
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     if (currentUser?.level !== "siswa") {
@@ -66,8 +62,16 @@ function RapotRekapSiswa() {
 
     setLoading(true);
     try {
+      // Ensure we're using the correct userID and clean any spaces
+      let userIdToUse = currentUser?.level === "siswa" ? currentUser.id : selectedSiswa;
+      
+      // Convert to string and trim any spaces
+      userIdToUse = String(userIdToUse).trim();
+      
+      console.log("Fetching rapot for userID:", userIdToUse, "semester:", semester);
+      
       const res = await axios.get(
-        `${API_BASE_URL}/api/rapot?userId=${selectedSiswa}&semester=${semester}`
+        `${API_BASE_URL}/api/rapot?userId=${userIdToUse}&semester=${semester}`
       );
       setData(res.data);
     } catch (err) {
@@ -89,7 +93,7 @@ function RapotRekapSiswa() {
             {currentUser?.level === "siswa" ? (
               <Form.Control
                 type="text"
-                value={currentUser.username}
+                value={`${currentUser.username || currentUser.name || 'Unknown'} (Siswa Login)`}
                 disabled
                 readOnly
               />
