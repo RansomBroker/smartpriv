@@ -93,7 +93,7 @@ function RapotRekapSiswa() {
             {currentUser?.level === "siswa" ? (
               <Form.Control
                 type="text"
-                value={`${currentUser.username || currentUser.name || 'Unknown'} (Siswa Login)`}
+                value={`${currentUser.username || currentUser.name || 'Unknown'}`}
                 disabled
                 readOnly
               />
