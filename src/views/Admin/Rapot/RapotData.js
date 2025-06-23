@@ -1,10 +1,12 @@
-import { Badge, Card } from "react-bootstrap";
+import { Badge, Card, Col, Row, Form, Button } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import { Pencil, Plus, Trash } from "react-bootstrap-icons";
 import SweetAlert2 from "react-sweetalert2";
 import axios from "axios";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const API_BASE_URL =
   process.env.NODE_ENV === "production"
@@ -16,18 +18,23 @@ function RapotData() {
   const [datas, setDatas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
+  const [siswaList, setSiswaList] = useState([]);
+  const [selectedSiswaId, setSelectedSiswaId] = useState("");
   const [swalProps, setSwalProps] = useState({
     show: false,
     onConfirmHandle: () => {},
   });
 
   useEffect(() => {
-    // Get user data from localStorage
     const userStr = localStorage.getItem("user");
     if (userStr) {
       const userData = JSON.parse(userStr);
       setCurrentUser(userData);
     }
+  }, []);
+
+  useEffect(() => {
+    fetchRapot();
   }, []);
 
   const fetchRapot = async () => {
@@ -42,7 +49,10 @@ function RapotData() {
   };
 
   useEffect(() => {
-    fetchRapot();
+    axios
+      .get(`${API_BASE_URL}/api/user?level=siswa`)
+      .then((res) => setSiswaList(res.data))
+      .catch((err) => console.error("Gagal mengambil data siswa:", err));
   }, []);
 
   const handleDelete = async (id) => {
@@ -66,7 +76,27 @@ function RapotData() {
     });
   };
 
-  // Get base path for navigation based on user role
+  const filteredData = selectedSiswaId
+    ? datas.filter((d) => d.user?.id === selectedSiswaId)
+    : [];
+
+  const handleCetakPDF = () => {
+    const doc = new jsPDF();
+    const siswa = siswaList.find((s) => s.id === selectedSiswaId);
+    const data = filteredData;
+
+    doc.setFontSize(16);
+    doc.text(`Rekap Nilai - ${siswa?.name || "-"}`, 14, 20);
+
+    autoTable(doc, {
+      startY: 30,
+      head: [["No", "Mapel", "Nilai", "Semester"]],
+      body: data.map((d, i) => [i + 1, d.mapel, d.nilai, d.semester]),
+    });
+
+    doc.save(`rapot_${siswa?.name}.pdf`);
+  };
+
   const basePath = currentUser?.level === "guru" ? "/guru" : "/office";
 
   const columns = [
@@ -132,10 +162,38 @@ function RapotData() {
             </Link>
           </div>
 
-          <div className="my-5">
+          <Row className="my-4">
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>Pilih Siswa</Form.Label>
+                <Form.Select
+                  value={selectedSiswaId}
+                  onChange={(e) => setSelectedSiswaId(e.target.value)}
+                >
+                  <option value="">-- Pilih Siswa --</option>
+                  {siswaList.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={3} className="d-flex align-items-end">
+              <Button
+                variant="danger"
+                onClick={handleCetakPDF}
+                disabled={!selectedSiswaId}
+              >
+                Cetak Rekap PDF
+              </Button>
+            </Col>
+          </Row>
+
+          <div className="my-4">
             <DataTable
               columns={columns}
-              data={datas}
+              data={filteredData}
               persistTableHead
               progressPending={loading}
               pagination

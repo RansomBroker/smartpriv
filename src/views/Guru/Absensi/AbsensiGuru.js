@@ -104,7 +104,7 @@ const payload = siswaTerisi.map((s) => ({
   userId: s.siswa_id,
   status: absensi[s.siswa_id],
   absentById: user.id,
-  absensiDate: new Date(tanggal).toISOString(),
+  absensiDate: new Date().toISOString(),
 }));
     axios
       .post(`${API_BASE_URL}/api/presensi`, payload)
@@ -174,10 +174,6 @@ const payload = siswaTerisi.map((s) => ({
           <Card>
             <Card.Header>Form Absensi Harian Manual</Card.Header>
             <Card.Body>
-              <Form.Group className="mb-3">
-                <Form.Label>Tanggal</Form.Label>
-                <Form.Control type="date" value={tanggal} onChange={(e) => setTanggal(e.target.value)} />
-              </Form.Group>
               {siswaForForm.map((s) => (
                 <Form.Group key={s.siswa_id} className="mb-3">
                   <Form.Label>{s.nama}</Form.Label>
