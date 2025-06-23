@@ -77,24 +77,50 @@ function RapotData() {
   };
 
   const filteredData = selectedSiswaId
-    ? datas.filter((d) => d.user?.id === selectedSiswaId)
-    : [];
+    ? datas.filter((d) => d.user?.id === parseInt(selectedSiswaId))
+    : datas;
 
   const handleCetakPDF = () => {
     const doc = new jsPDF();
-    const siswa = siswaList.find((s) => s.id === selectedSiswaId);
     const data = filteredData;
 
-    doc.setFontSize(16);
-    doc.text(`Rekap Nilai - ${siswa?.name || "-"}`, 14, 20);
+    if (selectedSiswaId) {
+      const siswa = siswaList.find((s) => s.id === parseInt(selectedSiswaId));
+      doc.setFontSize(16);
+      doc.text(`Rekap Nilai - ${siswa?.name || "-"}`, 14, 20);
 
-    autoTable(doc, {
-      startY: 30,
-      head: [["No", "Mapel", "Nilai", "Semester"]],
-      body: data.map((d, i) => [i + 1, d.mapel, d.nilai, d.semester]),
-    });
+      autoTable(doc, {
+        startY: 30,
+        head: [["No", "Mapel", "Nilai", "Semester", "Catatan"]],
+        body: data.map((d, i) => [
+          i + 1,
+          d.mapel,
+          d.nilai,
+          d.semester,
+          d.catatan,
+        ]),
+      });
 
-    doc.save(`rapot_${siswa?.name}.pdf`);
+      doc.save(`rapot_${siswa?.name?.trim() || "siswa"}.pdf`);
+    } else {
+      doc.setFontSize(16);
+      doc.text("Rekap Nilai - Semua Siswa", 14, 20);
+
+      autoTable(doc, {
+        startY: 30,
+        head: [["No", "Nama Siswa", "Mapel", "Nilai", "Semester", "Catatan"]],
+        body: data.map((d, i) => [
+          i + 1,
+          d.user?.name || d.user?.username || "-",
+          d.mapel,
+          d.nilai,
+          d.semester,
+          d.catatan,
+        ]),
+      });
+
+      doc.save("rapot_semua_siswa.pdf");
+    }
   };
 
   const basePath = currentUser?.level === "guru" ? "/guru" : "/office";
@@ -183,7 +209,7 @@ function RapotData() {
               <Button
                 variant="danger"
                 onClick={handleCetakPDF}
-                disabled={!selectedSiswaId}
+                disabled={filteredData.length === 0}
               >
                 Cetak Rekap PDF
               </Button>
